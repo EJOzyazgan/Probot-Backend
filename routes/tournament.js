@@ -1,4 +1,4 @@
-const engine = require('poker-holdem-engine');
+const engine = require('../engine/index');
 const {Bot} = require('../models/bot');
 const {Tournament} = require('../models/tournament');
 const gameSchema = require('../models/game');
@@ -14,28 +14,18 @@ router.get('/start', async (req, res) => {
         Bot.find({registered: true}, (err, bots) => {
             bots.forEach((bot) => {
                 bot.tournaments.push(tournament._id);
-                console.log(bot);
                 Bot.findByIdAndUpdate(bot._id, bot, {new: true},() => {});
             });
 
             if (err) return res.status(400).send("Tournament Start Error");
-            res.status(200).send("Tournament Started");
-            engine.start(tournament._id, bots);
+            res.status(200).send(`Tournament Started ${tournament._id}`);
+            engine.start(tournament._id.toString(), bots);
         });
     });
 });
 
 router.post('/quit', async (req, res) => {
-    await Bot.find({tournaments: req.body.id}, (err, bots) => {
-        bots.forEach(bot => {
-            Bot.update(bot._id, {registered: false});
-        })
-    });
-
-    await Tournament.update(req.body.id, {onGoing: false}, (err) => {
-        if (err) return res.status(400).send("Tournament Ended Error");
-        res.status(200).send("Tournament Ended");
-    });
+    quitTournament(req.body.id);
 });
 
 engine.on('tournament:aborted', () => {
@@ -71,12 +61,30 @@ const Game = mongoose.model('Game', gameSchema);
 
 function saveGame(data, done){
     let entry = new Game(data);
-    entry.save((err, savedData) => {
+    entry.save((err, savedGame) => {
+        console.log(savedGame);
         if(err){
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
+        if(savedGame.gameId === 1) {
+            quitTournament(savedGame.tournamentId);
+        }
         done();
+    });
+}
+
+function quitTournament(id) {
+    engine.quit(id);
+    Bot.find({tournaments: id}, (err, bots) => {
+        bots.forEach(bot => {
+            bot.registered = false;
+            Bot.findByIdAndUpdate(bot._id, bot, {new: true},() => {});
+        })
+    });
+
+    Tournament.findByIdAndUpdate(id, {$set: {onGoing: false}},{new: true}, (err, bot) => {
+
     });
 }
 
