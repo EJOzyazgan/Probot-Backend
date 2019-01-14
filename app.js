@@ -6,12 +6,32 @@ const logger = require('morgan');
 const {mongoose} = require('./db/mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
+const bodyParser = require('body-parser');
 
 const usersRouter = require('./routes/users');
 const tournamentRouter = require('./routes/tournament');
 const botRouter = require('./routes/bot');
 
+const port = process.env.PORT || 3000;
+
 const app = express();
+
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
+app.use(function (req,res,next) {
+  res.setHeader("Access-Control-Allow-Origin",  "*");
+  res.setHeader('Access-Control-Allow-Methods', "PUT, PATCH, GET, POST, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  next();
+});
+
+io.on('connection', (socket) => {
+  console.log("Connected to Socket!!"+ socket.id);
+  socket.emit('gameDataUpdated', {data: 'data goes here'});
+  exports.socket = socket;
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,6 +42,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
 
 app.use('/tournament', tournamentRouter);
 app.use('/users', usersRouter);
@@ -47,4 +68,7 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+http.listen(port, () => console.log(`Listening on port ${port}`));
+
+exports.server = http;
+exports.io = io;

@@ -6,6 +6,7 @@ const updateSchema = require('../models/update');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
+const app = require('../app');
 
 router.get('/start', async (req, res) => {
     let tournament = new Tournament({});
@@ -26,6 +27,11 @@ router.get('/start', async (req, res) => {
 
 router.post('/quit', async (req, res) => {
     quitTournament(req.body.id);
+});
+
+router.get('/socket', async (rec, res) => {
+    app.io.emit('gameDataUpdated', {data: 'data goes here'});
+    res.send("emit");
 });
 
 engine.on('tournament:aborted', () => {
