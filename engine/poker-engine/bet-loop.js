@@ -63,7 +63,7 @@ exports = module.exports = function* betLoop(gs){
     // to bet in the current session.
     gs.spinCount = 0;
 
-    const starterButton = gs.session == gameSession.pre ? hasBB_ : hasDB_;
+    const starterButton = gs.session === gameSession.pre ? hasBB_ : hasDB_;
     const startIndex = gs.players.findIndex(player => player[starterButton]);
 
     do {
@@ -93,7 +93,7 @@ exports = module.exports = function* betLoop(gs){
 
     const activePlayers = gs.activePlayers;
 
-    if (activePlayers.length == 1){
+    if (activePlayers.length === 1){
 
       // only one active player.
       // the betting loop is completed
@@ -117,7 +117,7 @@ exports = module.exports = function* betLoop(gs){
         gs.gameProgressiveId, gs.handProgressiveId, gs.session, getCommonCardsLogMessage(gs.commonCards), { tag: gs.handUniqueId });
 
       yield save({ type: 'cards', handId: gs.handUniqueId, session: gs.session,
-        commonCards: gs.session == gameSession.flop ? gs.commonCards : gs.commonCards.slice(-1) });
+        commonCards: gs.session === gameSession.flop ? gs.commonCards : gs.commonCards.slice(-1), players: gs.players});
 
     }
     else {
@@ -186,7 +186,7 @@ function getGameSession(commonCards){
  */
 function isBetRoundFinished(activePlayers, callAmount) {
 
-  if (activePlayers.length == 1){
+  if (activePlayers.length === 1){
     return true;
   }
 
@@ -214,7 +214,7 @@ function isBetRoundFinished(activePlayers, callAmount) {
  */
 function getPlayerStatusLogMessage(players){
   return players.reduce(function(msg, player) {
-    msg += player.status == playerStatus.out ?
+    msg += player.status === playerStatus.out ?
       `${player.name} is out. ` : `${player.name} has bet ${player.chipsBet} (${player.status}). `;
     return msg;
   }, '').trim().slice(0,-1);

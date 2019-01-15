@@ -59,6 +59,7 @@ function saveUpdates(data, done){
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
+        app.io.emit('gameDataUpdated', {data: savedData});
         done();
     });
 }
@@ -68,7 +69,6 @@ const Game = mongoose.model('Game', gameSchema);
 function saveGame(data, done){
     let entry = new Game(data);
     entry.save((err, savedGame) => {
-        console.log(savedGame);
         if(err){
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
@@ -76,6 +76,7 @@ function saveGame(data, done){
         if(savedGame.gameId === 1) {
             quitTournament(savedGame.tournamentId);
         }
+        app.io.emit('gameOver', {data: savedGame});
         done();
     });
 }

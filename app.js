@@ -29,7 +29,6 @@ app.use(function (req,res,next) {
 
 io.on('connection', (socket) => {
   console.log("Connected to Socket!!"+ socket.id);
-  socket.emit('gameDataUpdated', {data: 'data goes here'});
   exports.socket = socket;
 });
 

@@ -27,7 +27,7 @@ exports = module.exports = function* teardown(gs){
 
   logger.log('debug', getRankingLogMessage(gs.handChart), { tag: gs.handUniqueId });
 
-  yield save({ type: 'showdown', handId: gs.handUniqueId, players: gs.handChart });
+  yield save({ type: 'showdown', handId: gs.handUniqueId, players: gs.players });
 
 
 
@@ -35,7 +35,7 @@ exports = module.exports = function* teardown(gs){
 
   logger.log('debug', getWinsLogMessage(gs.winners), { tag: gs.handUniqueId });
 
-  yield save({ type: 'win', handId: gs.handUniqueId, winners: gs.winners });
+  yield save({ type: 'win', handId: gs.handUniqueId, winners: gs.winners, players: gs.players });
 
 
 
