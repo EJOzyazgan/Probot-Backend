@@ -26,17 +26,17 @@ exports = module.exports = function* dealer(gs){
   function waitResume() {
     return new Promise(function(res, rej) {
       const time = setInterval(function() {
-        if (gs.tournamentStatus == gameStatus.play){
+        if (gs.tournamentStatus === gameStatus.play){
           res(clearInterval(time));
         }
       }, 5000);
     });
   }
 
-  while (gs.tournamentStatus != gameStatus.stop){
+  while (gs.tournamentStatus !== gameStatus.stop){
 
     const activePlayers = gs.activePlayers;
-    const foldedPlayers = gs.players.filter(player => player.status == playerStatus.folded);
+    const foldedPlayers = gs.players.filter(player => player.status === playerStatus.folded);
 
 
     // when before a new hand starts,
@@ -64,7 +64,7 @@ exports = module.exports = function* dealer(gs){
       gs.players.forEach(player => { player.status = playerStatus.active; player.chips = config.BUYIN; });
       gs.gameChart = null;
 
-      if (gs.tournamentStatus == gameStatus.latest || gs.gameProgressiveId == config.MAX_GAMES){
+      if (gs.tournamentStatus === gameStatus.latest || gs.gameProgressiveId === config.MAX_GAMES){
         gs.tournamentStatus = gameStatus.stop;
         continue;
       }
@@ -96,13 +96,13 @@ exports = module.exports = function* dealer(gs){
 
     //
     // break here until the tournament is resumed
-    if (gs.tournamentStatus == gameStatus.pause){
+    if (gs.tournamentStatus === gameStatus.pause){
       logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
       yield waitResume();
     }
 
 
-    if (gs.tournamentStatus == gameStatus.play || gs.tournamentStatus == gameStatus.latest){
+    if (gs.tournamentStatus === gameStatus.play || gs.tournamentStatus === gameStatus.latest){
 
       if (config.HANDWAIT){
         yield sleep(config.HANDWAIT);
