@@ -6,6 +6,7 @@ const updateSchema = require('../models/update');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
+const app = require('../app');
 
 router.get('/start', async (req, res) => {
     let tournament = new Tournament({});
@@ -26,6 +27,11 @@ router.get('/start', async (req, res) => {
 
 router.post('/quit', async (req, res) => {
     quitTournament(req.body.id);
+});
+
+router.get('/socket', async (rec, res) => {
+    app.io.emit('gameDataUpdated', {data: 'data goes here'});
+    res.send("emit");
 });
 
 engine.on('tournament:aborted', () => {
@@ -53,6 +59,7 @@ function saveUpdates(data, done){
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
+        app.io.emit('gameDataUpdated', {data: savedData});
         done();
     });
 }
@@ -62,7 +69,6 @@ const Game = mongoose.model('Game', gameSchema);
 function saveGame(data, done){
     let entry = new Game(data);
     entry.save((err, savedGame) => {
-        console.log(savedGame);
         if(err){
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
@@ -70,6 +76,7 @@ function saveGame(data, done){
         if(savedGame.gameId === 1) {
             quitTournament(savedGame.tournamentId);
         }
+        app.io.emit('gameOver', {data: savedGame});
         done();
     });
 }
