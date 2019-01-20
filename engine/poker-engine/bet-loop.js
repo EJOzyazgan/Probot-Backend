@@ -40,7 +40,9 @@ exports = module.exports = function* betLoop(gs){
   const hasDB_ = Symbol.for('has-dealer-button');
   const hasTalked_ = Symbol.for('has-talked');
 
-
+  function sleep(time) {
+    return new Promise(res => setTimeout(res, time));
+  }
 
   // the betting loop continues until
   // all the community cards are shown
@@ -69,7 +71,13 @@ exports = module.exports = function* betLoop(gs){
     do {
 
       yield* asyncFrom(gs.players, startIndex, shouldBreak.bind(null, gs),
-        player => shouldBet(gs, player, player => player.talk(gs).then(player.payBet.bind(player, gs))));
+          player => shouldBet(gs, player, async player => {
+          player.talk(gs).then(player.payBet.bind(player, gs));
+
+          if (config.BETWAIT){
+            await sleep(config.BETWAIT);
+          }
+        }));
 
       gs.spinCount++;
 

@@ -11,6 +11,10 @@ const config = {
   // before a new one can start
   HANDWAIT: 2000,
 
+  // time (expressed in ms) to wait after a bet,
+  // before a new one can start
+  BETWAIT: 2000,
+
   // define the warm up phase of the tournament.
   // for the first WARMUP.GAME games of the tournament,
   // when a game ends, the engine will wait WARMUP.WAIT ms
