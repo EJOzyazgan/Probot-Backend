@@ -19,6 +19,8 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
+require('./config/passport');
+
 app.use(function (req,res,next) {
   res.setHeader("Access-Control-Allow-Origin",  "*");
   res.setHeader('Access-Control-Allow-Methods', "PUT, PATCH, GET, POST, DELETE, OPTIONS");
@@ -44,7 +46,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
 app.use('/tournament', tournamentRouter);
-app.use('/users', usersRouter);
+app.use('/user', usersRouter);
 app.use('/bot', botRouter);
 
 // catch 404 and forward to error handler
