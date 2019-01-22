@@ -39,8 +39,8 @@ router.post('/exists', auth.optional, (req, res) => {
     })
 });
 
-router.post('/get', auth.required, (req, res) => {
-    User.findById(req.body.userId).then((user) => {
+router.get('/get/:id', auth.required, (req, res) => {
+    User.findById(req.params.id).then((user) => {
         res.status(200).send(user);
     }).catch((e) => {
         res.status(400).send(e);
