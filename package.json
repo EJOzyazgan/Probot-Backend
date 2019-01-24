@@ -33,6 +33,7 @@
     "poker-ranking": "^1.1.2",
     "pug": "2.0.0-beta11",
     "request": "^2.88.0",
+    "sleep-promise": "^8.0.1",
     "socket.io": "^2.2.0",
     "validator": "^10.10.0"
   }
