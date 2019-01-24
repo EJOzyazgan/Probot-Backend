@@ -13,9 +13,9 @@ let BotSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
-    registered: {
-        type: Boolean,
-        default: true
+    userId: {
+        type: String,
+        required: true
     }
 });
 

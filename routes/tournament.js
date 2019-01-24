@@ -7,21 +7,22 @@ const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const app = require('../app');
+const ts = require('../config/tournamet-state');
 
-router.get('/start', async (req, res) => {
-    let tournament = new Tournament({});
+router.post('/create', async (req, res) => {
+    let newTournament = new Tournament(req.body);
 
-    await tournament.save().then(tournament => {
-        Bot.find({registered: true}, (err, bots) => {
-            bots.forEach((bot) => {
-                bot.tournaments.push(tournament._id);
-                Bot.findByIdAndUpdate(bot._id, bot, {new: true},() => {});
-            });
+    await newTournament.save().then((tournament, err) => {
+        if (err) return res.status(400).send("Tournament Creation Error");
+        res.status(200).send(`Tournament ${tournament._id} Created`);
+    });
+});
 
-            if (err) return res.status(400).send("Tournament Start Error");
-            res.status(200).send(`Tournament Started ${tournament._id}`);
-            engine.start(tournament._id.toString(), bots);
-        });
+router.post('/start', async (req, res) => {
+    Bot.find({tournaments: req.body.id}, (err, bots) => {
+        if (err) return res.status(400).send("Tournament Start Error");
+        res.status(200).send(`Tournament Started ${req.body.id}`);
+        engine.start(req.body.id.toString(), bots);
     });
 });
 
@@ -44,18 +45,18 @@ engine.on('tournament:completed', () => {
 
 engine.on('gamestate:updated', (data, done) => {
     if (data.type !== 'points')
-      return void saveUpdates(data, done);
+        return void saveUpdates(data, done);
 
     saveGame(data, done);
 });
 
 const Update = mongoose.model('Update', updateSchema);
 
-function saveUpdates(data, done){
-    [,data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
+function saveUpdates(data, done) {
+    [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
     let entry = new Update(data);
     entry.save((err, savedData) => {
-        if(err){
+        if (err) {
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
@@ -66,14 +67,14 @@ function saveUpdates(data, done){
 
 const Game = mongoose.model('Game', gameSchema);
 
-function saveGame(data, done){
+function saveGame(data, done) {
     let entry = new Game(data);
     entry.save((err, savedGame) => {
-        if(err){
+        if (err) {
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
-        if(savedGame.gameId === 1) {
+        if (savedGame.gameId === 1) {
             quitTournament(savedGame.tournamentId);
         }
         app.io.emit('gameOver', {data: savedGame});
@@ -86,11 +87,12 @@ function quitTournament(id) {
     Bot.find({tournaments: id}, (err, bots) => {
         bots.forEach(bot => {
             bot.registered = false;
-            Bot.findByIdAndUpdate(bot._id, bot, {new: true},() => {});
+            Bot.findByIdAndUpdate(bot._id, bot, {new: true}, () => {
+            });
         })
     });
 
-    Tournament.findByIdAndUpdate(id, {$set: {onGoing: false}},{new: true}, (err, bot) => {
+    Tournament.findByIdAndUpdate(id, {$set: {state: ts.closed}}, {new: true}, (err, bot) => {
 
     });
 }
