@@ -1,9 +1,18 @@
 const mongoose = require('mongoose');
+const ts = require('../config/tournamet-state');
 
 let TournamentSchema = new mongoose.Schema({
-    onGoing: {
-        type: Boolean,
-        default: true
+    state: {
+        type: String,
+        default: ts.registration
+    },
+    maxPlayers: {
+        type: Number,
+        default: 100
+    },
+    name: {
+        type: String,
+        required: true
     }
 });
 
