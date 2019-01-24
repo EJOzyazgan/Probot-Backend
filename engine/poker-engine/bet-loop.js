@@ -16,6 +16,8 @@ const shouldBreak = require('./domain-utils/should-break');
 
 const asyncFrom = require('./lib/loop-from-async');
 
+const sleep = require('sleep-promise');
+
 
 
 /**
@@ -39,10 +41,6 @@ exports = module.exports = function* betLoop(gs){
   const hasBB_ = Symbol.for('has-big-blind');
   const hasDB_ = Symbol.for('has-dealer-button');
   const hasTalked_ = Symbol.for('has-talked');
-
-  function sleep(time) {
-    return new Promise(res => setTimeout(res, time));
-  }
 
   // the betting loop continues until
   // all the community cards are shown
