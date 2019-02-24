@@ -28,7 +28,7 @@ router.post('/update', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-    Bot.findByIdAndUpdate(req.body.id, {$addToSet: {tournaments: req.body.tournamentId}}, {new: true}, (err, bot) => {
+    Bot.findByIdAndUpdate(req.body.id, {$addToSet: {tournaments: {tournamentId: req.body.tournamentId, score: 0}}}, {new: true}, (err, bot) => {
         if (err) return res.status(400).send(err);
         res.status(200).send("Bot Registered");
     });

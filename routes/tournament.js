@@ -45,10 +45,10 @@ router.post('/bracket/create', async (req, res) => {
         }
     }
 
-    let finalRound = false;
     for(let i = 0; i < numDivisions; i++){
         let division = {name: i, rounds: [], winner: null};
 
+        let finalRound = false;
         for(let x = 0; !finalRound; x++){
             let round = {name: x, games: [], winners: []};
 
@@ -61,7 +61,7 @@ router.post('/bracket/create', async (req, res) => {
                 if(x === 0){
                     let numBots = bots.length/numDivisions/4;
                     for(let k = numBots*(y); k < numBots*(y+1); k++){
-                        game.bots.push(bots[k]);
+                        game.bots.push({bot: bots[k], score: 0, status: 'play'});
                     }
                 }
                 round.games.push(game);
@@ -76,6 +76,13 @@ router.post('/bracket/create', async (req, res) => {
         if (err) return res.status(400).send(err);
         res.status(200).json({message: "Bot Saved", bracket: bracket});
     });
+});
+
+router.post('/bracket/get', async (req, res) => {
+    Bracket.findOne({tournamentId: req.body.tournamentId}, (err, bracket) => {
+        if (err) return res.status(400).json({message: "Error Getting Bracket", error: err});
+        res.status(200).send(bracket);
+    })
 });
 
 router.post('/quit', async (req, res) => {
