@@ -10,7 +10,7 @@ let BotSchema = new mongoose.Schema({
         required: true
     },
     tournaments: {
-        type: [String],
+        type: [JSON],
         default: []
     },
     userId: {
