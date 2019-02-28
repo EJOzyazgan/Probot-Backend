@@ -19,16 +19,17 @@ router.post('/create', async (req, res) => {
     });
 });
 
-router.get('/all', async (req, res)  => {
-   Tournament.find({}).then((tournaments, err) => {
-       if (err) return res.status(400).send("Error retrieving tournaments");
-       res.status(200).json({message: 'Tournaments received successfully', tournaments: tournaments});
-   });
+router.get('/all', async (req, res) => {
+    Tournament.find({}).then((tournaments, err) => {
+        if (err) return res.status(400).send("Error retrieving tournaments");
+        res.status(200).json({message: 'Tournaments received successfully', tournaments: tournaments});
+    });
 });
 
 router.post('/start/game', async (req, res) => {
-        engine.start(req.body.id.toString(), req.body.bots);
-        return res.status(200).send('Game Started')
+    const gameId = '' + req.body.division.name + req.body.round.name + req.body.game.name;
+    engine.start('' + req.body.tournament._id + '-' + gameId, req.body.game.bots);
+    return res.status(200).send('Game Started')
 });
 
 router.post('/bracket/create', async (req, res) => {
@@ -39,32 +40,32 @@ router.post('/bracket/create', async (req, res) => {
     let bracket = new Bracket(req.body);
     let numDivisions = 0;
     let bots = [];
-    for(let i=0; i<100; i++)
+    for (let i = 0; i < 100; i++)
         bots.push({name: `Bot ${i}`});
 
-    for(let i = 6; i > 2; i--){
-        if(bots.length % i === 0){
-               numDivisions = i;
-               break;
+    for (let i = 6; i > 2; i--) {
+        if (bots.length % i === 0) {
+            numDivisions = i;
+            break;
         }
     }
 
-    for(let i = 0; i < numDivisions; i++){
+    for (let i = 0; i < numDivisions; i++) {
         let division = {name: i, rounds: [], winner: null};
 
         let finalRound = false;
-        for(let x = 0; !finalRound; x++){
+        for (let x = 0; !finalRound; x++) {
             let round = {name: x, games: [], winners: []};
 
-            let numGames = Math.floor(4/(x+1));
-            if(numGames === 1) finalRound = true;
+            let numGames = Math.floor(4 / (x + 1));
+            if (numGames === 1) finalRound = true;
 
-            for(let y = 0; y < numGames; y++){
+            for (let y = 0; y < numGames; y++) {
                 let game = {name: y, bots: [], winners: []};
 
-                if(x === 0){
-                    let numBots = bots.length/numDivisions/4;
-                    for(let k = numBots*(y); k < numBots*(y+1); k++){
+                if (x === 0) {
+                    let numBots = bots.length / numDivisions / 4;
+                    for (let k = numBots * (y); k < numBots * (y + 1); k++) {
                         game.bots.push({bot: bots[k], score: 0, status: 'play'});
                     }
                 }
