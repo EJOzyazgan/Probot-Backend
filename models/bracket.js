@@ -8,6 +8,10 @@ let BracketSchema = new mongoose.Schema({
     tournamentId: {
         type: String,
         required: true
+    },
+    name: {
+        type: String,
+        required: true
     }
 });
 

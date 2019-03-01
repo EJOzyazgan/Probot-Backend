@@ -15,16 +15,21 @@ router.post('/create', async (req, res) => {
 
     await newTournament.save().then((tournament, err) => {
         if (err) return res.status(400).send("Tournament Creation Error");
-        res.status(200).send(`Tournament ${tournament._id} Created`);
+        res.status(200).json({message: `Tournament ${tournament.name} Created`, tournament: tournament});
     });
 });
 
-router.post('/start', async (req, res) => {
-    Bot.find({tournaments: req.body.id}, (err, bots) => {
-        if (err) return res.status(400).send("Tournament Start Error");
-        res.status(200).send(`Tournament Started ${req.body.id}`);
-        engine.start(req.body.id.toString(), bots);
+router.get('/all', async (req, res) => {
+    Tournament.find({}).then((tournaments, err) => {
+        if (err) return res.status(400).send("Error retrieving tournaments");
+        res.status(200).json({message: 'Tournaments received successfully', tournaments: tournaments});
     });
+});
+
+router.post('/start/game', async (req, res) => {
+    const gameId = '' + req.body.division.name + req.body.round.name + req.body.game.name;
+    engine.start('' + req.body.tournament._id + '-' + gameId, req.body.game.bots);
+    return res.status(200).send('Game Started')
 });
 
 router.post('/bracket/create', async (req, res) => {
@@ -32,35 +37,35 @@ router.post('/bracket/create', async (req, res) => {
     //     if (err) return res.status(400).send("Bracket Creation Error");
     // });
 
-    let bracket = new Bracket({tournamentId: req.body.tournamentId});
+    let bracket = new Bracket(req.body);
     let numDivisions = 0;
     let bots = [];
-    for(let i=0; i<req.body.num; i++)
+    for (let i = 0; i < 100; i++)
         bots.push({name: `Bot ${i}`});
 
-    for(let i = 6; i > 2; i--){
-        if(bots.length % i === 0){
-               numDivisions = i;
-               break;
+    for (let i = 6; i > 2; i--) {
+        if (bots.length % i === 0) {
+            numDivisions = i;
+            break;
         }
     }
 
-    for(let i = 0; i < numDivisions; i++){
+    for (let i = 0; i < numDivisions; i++) {
         let division = {name: i, rounds: [], winner: null};
 
         let finalRound = false;
-        for(let x = 0; !finalRound; x++){
+        for (let x = 0; !finalRound; x++) {
             let round = {name: x, games: [], winners: []};
 
-            let numGames = Math.floor(4/(x+1));
-            if(numGames === 1) finalRound = true;
+            let numGames = Math.floor(4 / (x + 1));
+            if (numGames === 1) finalRound = true;
 
-            for(let y = 0; y < numGames; y++){
+            for (let y = 0; y < numGames; y++) {
                 let game = {name: y, bots: [], winners: []};
 
-                if(x === 0){
-                    let numBots = bots.length/numDivisions/4;
-                    for(let k = numBots*(y); k < numBots*(y+1); k++){
+                if (x === 0) {
+                    let numBots = bots.length / numDivisions / 4;
+                    for (let k = numBots * (y); k < numBots * (y + 1); k++) {
                         game.bots.push({bot: bots[k], score: 0, status: 'play'});
                     }
                 }
@@ -71,19 +76,26 @@ router.post('/bracket/create', async (req, res) => {
         bracket.divisions.push(division);
     }
 
-
     await bracket.save((err, bracket) => {
         if (err) return res.status(400).send(err);
         res.status(200).json({message: "Bot Saved", bracket: bracket});
     });
 });
 
-router.post('/bracket/get', async (req, res) => {
-    Bracket.findOne({tournamentId: req.body.tournamentId}, (err, bracket) => {
+router.post('/bracket/get/all', async (req, res) => {
+    Bracket.find({tournamentId: req.body.tournamentId}, (err, brackets) => {
+        if (err) return res.status(400).json({message: "Error Getting Brackets", error: err});
+        res.status(200).send(brackets);
+    })
+});
+
+router.post('/bracket/get/:id', async (req, res) => {
+    Bracket.findById(req.body.bracketId, (err, bracket) => {
         if (err) return res.status(400).json({message: "Error Getting Bracket", error: err});
         res.status(200).send(bracket);
     })
 });
+
 
 router.post('/quit', async (req, res) => {
     quitTournament(req.body.id);
