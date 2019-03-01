@@ -10,6 +10,9 @@ const router = express.Router();
 const app = require('../app');
 const ts = require('../config/tournamet-state');
 
+//PLAYERS
+const testPlayer = require('../demo-players/test-player');
+
 router.post('/create', async (req, res) => {
     let newTournament = new Tournament(req.body);
 
@@ -104,6 +107,10 @@ router.post('/quit', async (req, res) => {
 router.get('/socket', async (rec, res) => {
     app.io.emit('gameDataUpdated', {data: 'data goes here'});
     res.send("emit");
+});
+
+router.post('/bet', async  (req, res) => {
+    res.status(200).send(testPlayer.bet(req.body).toString());
 });
 
 engine.on('tournament:aborted', () => {
