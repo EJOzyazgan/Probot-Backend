@@ -1,32 +1,43 @@
-import sys
 
 
-def bet_1(gamestate):
-    print(gamestate)
+# Folds every time, id a call if game_state.callAmount == 0
+def bet_5c7b86475898d33c8000f05a(game_state):
+    print(0)
     return 0
 
 
-def bet_2(gamestate):
-    print(gamestate)
-    return gamestate.callAmount
+# Call every time
+def bet_5c7b864c5898d33c8000f05b(game_state):
+    print(1)
+    return game_state['callAmount']
 
 
-def bet_3(gamestate):
-    my_bot = gamestate.players[gamestate.me]
-    half_buyin = gamestate.buyin * 0.5
+# Gets bot from game_state
+# If your chips are < half the buy in, go all in
+# Otherwise call
+def bet_5c7b86525898d33c8000f05c(game_state):
+    print(2)
+    my_bot = game_state['players'][game_state['me']]
+    half_buyin = game_state['buyin'] * 0.5
 
-    if my_bot.chips < half_buyin:
-        return sys.maxsize
-    return gamestate.callAmount
+    print('MY BOT', my_bot)
+
+    if my_bot['chips'] < half_buyin:
+        return my_bot['chips']
+    return game_state['callAmount']
 
 
-def bet_4(gamestate):
-    gs = gamestate
-    p = gs.players
-    me = p[gs.me]
+# Gets bot from game_state
+# If you have two of a kind raises for twice the minimum amount
+# Otherwise calls
+def bet_5c7b865a5898d33c8000f05d(game_state):
+    print(3)
+    gs = game_state
+    p = gs['players']
+    me = p[gs['me']]
 
-    if me.cards[0].rank != me.cards[1].rank:
-        return gs.minimumRaiseAmount * 2
-    elif me.chipsBet > 0:
-        return gs.callAmount
+    if me['cards'][0]['rank'] != me['cards'][1]['rank']:
+        return gs['minimumRaiseAmount'] * 2
+    elif me['chipsBet'] > 0:
+        return gs['callAmount']
     return 0
