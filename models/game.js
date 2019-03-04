@@ -20,13 +20,17 @@
 
 const mongoose = require('mongoose');
 
-const player = new mongoose.Schema({
+const Player = new mongoose.Schema({
     name: String,
     pts: Number
 });
 
-exports = module.exports = new mongoose.Schema({
+const GameSchema = new mongoose.Schema({
     tournamentId: String,
     gameId: Number,
-    rank: [player]
+    rank: [Player]
 });
+
+let Game = mongoose.model('Game', GameSchema);
+
+module.exports = {Game};

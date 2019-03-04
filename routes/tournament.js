@@ -2,8 +2,8 @@ const engine = require('../engine/index');
 const {Bot} = require('../models/bot');
 const {Bracket} = require('../models/bracket');
 const {Tournament} = require('../models/tournament');
-const gameSchema = require('../models/game');
-const updateSchema = require('../models/update');
+const {Game} = require('../models/game');
+const {Update} = require('../models/update');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -128,8 +128,6 @@ engine.on('gamestate:updated', (data, done) => {
     saveGame(data, done);
 });
 
-const Update = mongoose.model('Update', updateSchema);
-
 function saveUpdates(data, done) {
     [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
     let entry = new Update(data);
@@ -142,8 +140,6 @@ function saveUpdates(data, done) {
         done();
     });
 }
-
-const Game = mongoose.model('Game', gameSchema);
 
 function saveGame(data, done) {
     let entry = new Game(data);
