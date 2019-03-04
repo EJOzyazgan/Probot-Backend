@@ -9,7 +9,7 @@ def bet_5c7b86475898d33c8000f05a(game_state):
 # Call every time
 def bet_5c7b864c5898d33c8000f05b(game_state):
     print(1)
-    return game_state['callAmount']
+    return game_state['state']['callAmount']
 
 
 # Gets bot from game_state
@@ -17,14 +17,14 @@ def bet_5c7b864c5898d33c8000f05b(game_state):
 # Otherwise call
 def bet_5c7b86525898d33c8000f05c(game_state):
     print(2)
-    my_bot = game_state['players'][game_state['me']]
-    half_buyin = game_state['buyin'] * 0.5
+    my_bot = game_state['state']['players'][game_state['state']['me']]
+    half_buyin = game_state['state']['buyin'] * 0.5
 
     print('MY BOT', my_bot)
 
     if my_bot['chips'] < half_buyin:
         return my_bot['chips']
-    return game_state['callAmount']
+    return game_state['state']['callAmount']
 
 
 # Gets bot from game_state
@@ -32,7 +32,7 @@ def bet_5c7b86525898d33c8000f05c(game_state):
 # Otherwise calls
 def bet_5c7b865a5898d33c8000f05d(game_state):
     print(3)
-    gs = game_state
+    gs = game_state['state']
     p = gs['players']
     me = p[gs['me']]
 

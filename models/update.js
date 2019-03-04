@@ -23,8 +23,7 @@ const winnerSchema = new mongoose.Schema({
     amount: { type: Number, required: true }
 });
 
-
-exports = module.exports = new mongoose.Schema({
+const UpdateSchema = new mongoose.Schema({
     tournamentId: { type: String, required: true },
     gameId: { type: Number, required: true },
     handId: { type: Number, required: true },
@@ -40,3 +39,7 @@ exports = module.exports = new mongoose.Schema({
     winners: [winnerSchema],
     playerName: String
 });
+
+let Update = mongoose.model('Update', UpdateSchema);
+
+module.exports = {Update};

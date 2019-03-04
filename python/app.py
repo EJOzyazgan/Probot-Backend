@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route("/bet", methods=['POST'])
 def get_bot():
-    player = request.json['players'][request.json['me']]
+    player = request.json['state']['players'][request.json['state']['me']]
     print('PLAYER: ', player['id'])
 
     if player['id'] == "5c7b86475898d33c8000f05a":
