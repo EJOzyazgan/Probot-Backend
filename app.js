@@ -31,7 +31,10 @@ app.use(function (req,res,next) {
 
 io.on('connection', (socket) => {
   console.log("Connected to Socket!!"+ socket.id);
-  exports.socket = socket;
+
+  socket.on('room', (room)=>{
+    socket.join(room);
+  });
 });
 
 // view engine setup

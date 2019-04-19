@@ -31,7 +31,8 @@ router.get('/all', async (req, res) => {
 
 router.post('/start/game', async (req, res) => {
     const gameId = '' + req.body.division.name + req.body.round.name + req.body.game.name;
-    engine.start('' + req.body.tournament._id + '-' + gameId, req.body.game.bots);
+    const tournamentId = '' + req.body.tournament._id + '-' + gameId;
+    engine.start(tournamentId, req.body.game.bots);
     return res.status(200).send('Game Started')
 });
 
@@ -104,12 +105,13 @@ router.post('/quit', async (req, res) => {
     quitTournament(req.body.id);
 });
 
-router.get('/socket', async (rec, res) => {
-    app.io.emit('gameDataUpdated', {data: 'data goes here'});
+router.post('/socket', async (req, res) => {
+    console.log(req.body.room);
+    app.io.sockets.in(req.body.room).emit('test', {data: `Hello room ${req.body.room}`});
     res.send("emit");
 });
 
-router.post('/bet', async  (req, res) => {
+router.post('/bet', async (req, res) => {
     res.status(200).send(testPlayer.bet(req.body).toString());
 });
 
@@ -136,7 +138,7 @@ function saveUpdates(data, done) {
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
-        app.io.emit('gameDataUpdated', {data: savedData});
+        app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', {data: savedData});
         done();
     });
 }
@@ -151,7 +153,7 @@ function saveGame(data, done) {
         if (savedGame.gameId === 1) {
             quitTournament(savedGame.tournamentId);
         }
-        app.io.emit('gameOver', {data: savedGame});
+        app.io.sockets.in(data.tournamentId).emit('gameOver', {data: savedGame});
         done();
     });
 }
