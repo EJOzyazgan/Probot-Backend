@@ -30,50 +30,53 @@ router.get('/all', async (req, res) => {
 });
 
 router.post('/start/game', async (req, res) => {
-    const gameId = '' + req.body.division.name + req.body.round.name + req.body.game.name;
+    const gameId = '' + req.body.division.name + req.body.round.name + req.body.match.name;
     const tournamentId = '' + req.body.tournament._id + '-' + gameId;
-    engine.start(tournamentId, req.body.game.bots);
-    return res.status(200).send('Game Started')
+    console.log(tournamentId);
+    // console.log(getBots(req.body.match.bots));
+    engine.start(tournamentId, getBots(req.body.match.bots));
+    return res.status(200).json({message: 'Match Started'})
 });
 
 router.post('/bracket/create', async (req, res) => {
-    // Bot.find({tournaments: req.body.id}, (err, bots) => {
-    //     if (err) return res.status(400).send("Bracket Creation Error");
-    // });
-
     let bracket = new Bracket(req.body);
-    let numDivisions = 0;
+    let numDivisions = 1;
     let bots = [];
-    for (let i = 0; i < 100; i++)
-        bots.push({name: `Bot ${i}`});
 
-    for (let i = 6; i > 2; i--) {
-        if (bots.length % i === 0) {
-            numDivisions = i;
-            break;
-        }
-    }
+    await Bot.find({}, (err, bot) => {
+        if (err) return res.status(400).send("Bracket Creation Error");
+        bots = bot
+    });
+    // for (let i = 0; i < 100; i++)
+    //     bots.push({name: `Bot ${i}`});
+
+    // for (let i = 6; i > 2; i--) {
+    //     if (bots.length % i === 0) {
+    //         numDivisions = i;
+    //         break;
+    //     }
+    // }
 
     for (let i = 0; i < numDivisions; i++) {
         let division = {name: i, rounds: [], winner: null};
 
         let finalRound = false;
         for (let x = 0; !finalRound; x++) {
-            let round = {name: x, games: [], winners: []};
+            let round = {name: x, matches: [], winners: []};
 
             let numGames = Math.floor(4 / (x + 1));
             if (numGames === 1) finalRound = true;
 
             for (let y = 0; y < numGames; y++) {
-                let game = {name: y, bots: [], winners: []};
+                let match = {name: y, bots: [], winners: []};
 
                 if (x === 0) {
                     let numBots = bots.length / numDivisions / 4;
                     for (let k = numBots * (y); k < numBots * (y + 1); k++) {
-                        game.bots.push({bot: bots[k], score: 0, status: 'play'});
+                        match.bots.push({bot: bots[k], score: 0, status: 'play'});
                     }
                 }
-                round.games.push(game);
+                round.matches.push(match);
             }
             division.rounds.push(round);
         }
@@ -82,7 +85,7 @@ router.post('/bracket/create', async (req, res) => {
 
     await bracket.save((err, bracket) => {
         if (err) return res.status(400).send(err);
-        res.status(200).json({message: "Bot Saved", bracket: bracket});
+        res.status(200).json({message: "Bracket Saved", bracket: bracket});
     });
 });
 
@@ -98,6 +101,13 @@ router.post('/bracket/get/:id', async (req, res) => {
         if (err) return res.status(400).json({message: "Error Getting Bracket", error: err});
         res.status(200).send(bracket);
     })
+});
+
+router.post('/bracket/update', async (req, res) => {
+    Bracket.findByIdAndUpdate(req.body._id, req.body, {new: true}, (err, bracket) => {
+        console.log(bracket);
+        res.status(200).json({message: "Bracket Updated", bracket: bracket});
+    });
 });
 
 
@@ -130,6 +140,18 @@ engine.on('gamestate:updated', (data, done) => {
     saveGame(data, done);
 });
 
+function getBots(matchBots) {
+    let bots = [];
+
+    for (let bot of matchBots) {
+        bot.bot.id = bot.bot._id;
+        bots.push(bot.bot);
+        console.log(bot.bot.id, bot.bot.id);
+    }
+
+    return bots;
+}
+
 function saveUpdates(data, done) {
     [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
     let entry = new Update(data);
@@ -150,7 +172,7 @@ function saveGame(data, done) {
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
-        if (savedGame.gameId === 1) {
+        if (savedGame.gameId === 3) {
             quitTournament(savedGame.tournamentId);
         }
         app.io.sockets.in(data.tournamentId).emit('gameOver', {data: savedGame});
@@ -163,7 +185,7 @@ function quitTournament(id) {
     Bot.find({tournaments: id}, (err, bots) => {
         bots.forEach(bot => {
             bot.registered = false;
-            Bot.findByIdAndUpdate(bot._id, bot, {new: true}, () => {
+            Bot.findByIdAndUpdate(bot.id, bot, {new: true}, () => {
             });
         })
     });

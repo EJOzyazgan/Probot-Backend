@@ -103,7 +103,7 @@ class Deck:
     def __str__(self):
         return str([str(self.id_to_card(id)) for id in self.cards])
 
-    def card_to_id(self, card):
+    def card_toid(self, card):
         return Deck.types.index(card.type) * len(Deck.ranks) \
                + Deck.ranks.index(card.rank)
 
@@ -120,7 +120,7 @@ class Deck:
         return [self.id_to_card(o) for o in out]
 
     def remove_card(self, card):
-        self.cards.remove(self.card_to_id(card))
+        self.cards.remove(self.card_toid(card))
 
     '''
     def remove_card(self, rank, type):

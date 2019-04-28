@@ -107,15 +107,15 @@ def best_hand(cards, revealed_cards):
         return 'Full house', first_three, first_two, 0, 0, 0
 
     max_suit = -1
-    max_suit_idx = -1  # i:i+5
+    max_suitidx = -1  # i:i+5
     for i in range(len(cards_suit) - 4):
         if suit_checker(cards_suit[i:i + 5]):
             if cards_suit[i + 4][0] > max_suit:
                 max_suit = cards_suit[i + 4][0]
-                max_suit_idx = i
+                max_suitidx = i
     if max_suit >= 0:
-        return 'Flush', max_suit, cards_suit[max_suit_idx + 3][0], cards_suit[max_suit_idx + 2][0], \
-               cards_suit[max_suit_idx + 1][0], cards_suit[max_suit_idx][0]
+        return 'Flush', max_suit, cards_suit[max_suitidx + 3][0], cards_suit[max_suitidx + 2][0], \
+               cards_suit[max_suitidx + 1][0], cards_suit[max_suitidx][0]
 
     for i in range(12, 3, -1):
         if card_count[i] > 0 and card_count[i - 1] > 0 and card_count[i - 2] > 0 and card_count[i - 3] > 0 \
@@ -202,7 +202,7 @@ table2 = np.zeros((5, 3, 10, 7, 7, 4))  # use best hand as an approximation, and
 # this is for 4 revealed cards
 table3 = np.zeros((5, 3, 10, 7, 7, 4))  # use best hand as an approximation, and chips bet ratio
 pids = []  # only record opponents
-pid_to_id = None
+pid_toid = None
 
 
 # action: fold, call, raise (determined by the minimum call amount)
@@ -231,12 +231,12 @@ def opponent_model(history, handid, me, num_players):
         res_list = [3 for i in range(num_players - 1)]
         for player in history[last_h]['winners']:
             if player['id'] != me:
-                res_list[pid_to_id[player['id']]] = 2
+                res_list[pid_toid[player['id']]] = 2
         learn_list = list(range(num_players - 1))
     else:
         for player in history[last_h]['winners']:
-            res_list[pid_to_id[player['id']]] = 1
-            learn_list.append(pid_to_id[player['id']])
+            res_list[pid_toid[player['id']]] = 1
+            learn_list.append(pid_toid[player['id']])
     # obtain learning resources from history
     for i in range(last_h, -1, -1):
         if history[i]['handId'] != handid:
@@ -252,7 +252,7 @@ def opponent_model(history, handid, me, num_players):
     final_cards = card_preprocess(list(history[last_h]['commonCards']))
     my_best_hand = best_hand_to_list(cards, final_cards)
 
-    for player_id in learn_list:
+    for playerid in learn_list:
         # from start, obtain all common cards, betRatio
         common_cards = []
         bet_ratio = []
@@ -262,11 +262,11 @@ def opponent_model(history, handid, me, num_players):
         for i in range(start_h, last_h + 1):
             if 'playerId' not in history[i]:
                 continue
-            if history[i]['playerId'] != pids[player_id]:
+            if history[i]['playerId'] != pids[playerid]:
                 continue
             common_cards.append(card_preprocess(history[i]['commonCards']))
             for player in history[i]['players']:
-                if player['id'] == pids[player_id]:
+                if player['id'] == pids[playerid]:
                     ratio = history[i]['players']['chipsBet'] / (
                                 history[i]['players']['chipsBet'] + history[i]['players']['chips'])
                     bet_ratio.append(ratio)
@@ -318,9 +318,9 @@ def opponent_model(history, handid, me, num_players):
                 p_cards = [all_cards[card1_i], all_cards[card2_i]]
                 player_best_hand = best_hand_to_list(p_cards, final_cards)
                 cmp_res = hand_cmp(player_best_hand, my_best_hand)
-                if (cmp_res < 0 and res_list[player_id] == 3) \
-                        or (cmp_res == 0 and res_list[player_id] == 2) \
-                        or (cmp_res > 0 and res_list[player_id] == 1):
+                if (cmp_res < 0 and res_list[playerid] == 3) \
+                        or (cmp_res == 0 and res_list[playerid] == 2) \
+                        or (cmp_res > 0 and res_list[playerid] == 1):
                     possible_cards.append(p_cards)
         # for all possible cards, update
         max_num = len(possible_cards)
@@ -332,17 +332,17 @@ def opponent_model(history, handid, me, num_players):
                     if possible_cards[i][0][1] == possible_cards[i][1][1]:
                         same_color = 1
                     table1[
-                        player_id, actions[i], same_color, possible_cards[i][0][0] // 2, possible_cards[i][0][1] // 2, \
+                        playerid, actions[i], same_color, possible_cards[i][0][0] // 2, possible_cards[i][0][1] // 2, \
                         past_ratio[i]] += 1 / max_num
                 elif len(common_cards[i] == 3):
                     # 5 card scenario
                     player_best_hand = best_hand_to_list(possible_cards[i], common_cards[i])
-                    table2[player_id, actions[i], player_best_hand[0], player_best_hand[1] // 2, \
+                    table2[playerid, actions[i], player_best_hand[0], player_best_hand[1] // 2, \
                            player_best_hand[2] // 2, past_ratio[i]] += 1 / max_num
                 else:
                     # 6 card scenario
                     player_best_hand = best_hand_to_list(possible_cards[i], common_cards[i])
-                    table3[player_id, actions[i], player_best_hand[0], player_best_hand[1] // 2, \
+                    table3[playerid, actions[i], player_best_hand[0], player_best_hand[1] // 2, \
                            player_best_hand[2] // 2, past_ratio[i]] += 1 / max_num
 
 
@@ -372,15 +372,15 @@ def win_lose_prob(cards, revealed_cards, actions, past_ratios, num_players):
     for t in range(SAMPLE_NUM):
         new_revealed_cards = list(revealed_cards)
         add_reveal_cards = max_reveal_cards - len(new_revealed_cards)
-        sampled_idx = np.random.choice(len(all_cards), add_reveal_cards + 2 * (num_players - 1), replace=False)
+        sampledidx = np.random.choice(len(all_cards), add_reveal_cards + 2 * (num_players - 1), replace=False)
         # randomly sample remaining revealed cards
         for i in range(max_reveal_cards - len(new_revealed_cards)):
-            new_revealed_cards.append(all_cards[sampled_idx[i]])
+            new_revealed_cards.append(all_cards[sampledidx[i]])
         player_cards = []
         player_best_hands = []
         for i in range(num_players - 1):
-            player_cards.append([all_cards[sampled_idx[add_reveal_cards + i * 2]],
-                                 all_cards[sampled_idx[add_reveal_cards + i * 2 + 1]]])
+            player_cards.append([all_cards[sampledidx[add_reveal_cards + i * 2]],
+                                 all_cards[sampledidx[add_reveal_cards + i * 2 + 1]]])
         # obtain best cards for each player
         for i in range(num_players - 1):
             # print(best_hand(player_cards[i], new_revealed_cards))
@@ -475,7 +475,7 @@ prev_common_cards = []  # record previous common cards in case it is empty
 
 
 def potential(game_state):
-    global actions, past_chips, past_bets, pids, pid_to_id, prev_common_cards
+    global actions, past_chips, past_bets, pids, pid_toid, prev_common_cards
     state = game_state['state']
     history = game_state['history']
     # first check if history contains win
@@ -487,9 +487,9 @@ def potential(game_state):
             if player['id'] != me:
                 pids.append(player['id'])
         # obtain pid to id
-        pid_to_id = {}
+        pid_toid = {}
         for i in range(len(pids)):
-            pid_to_id[pids[i]] = i
+            pid_toid[pids[i]] = i
 
     if actions[0] != -2:
         # can't right after initial
@@ -511,23 +511,23 @@ def potential(game_state):
         # record chips and bets
         for player in state['players']:
             if player['id'] != me:
-                past_chips[pid_to_id[player['id']]] = player['chips']
-                past_bets[pid_to_id[player['id']]] = player['chipsBet']
+                past_chips[pid_toid[player['id']]] = player['chips']
+                past_bets[pid_toid[player['id']]] = player['chipsBet']
                 if player['status'] == 'folded':
-                    actions[pid_to_id[player['id']]] = 0
+                    actions[pid_toid[player['id']]] = 0
                 else:
-                    actions[pid_to_id[player['id']]] = 1
+                    actions[pid_toid[player['id']]] = 1
                 past_ratios = [0, 0, 0, 0, 0, 0]
     else:
         # trace back to set action
         for player in state['players']:
             if player['id'] != me:
                 amount = state['callAmount']
-                if actions[pid_to_id[player['id']]] == -1:
+                if actions[pid_toid[player['id']]] == -1:
                     continue
                 if player['status'] == 'folded':
-                    if actions[pid_to_id[player['id']]] == 0:
-                        actions[pid_to_id[player['id']]] = -1
+                    if actions[pid_toid[player['id']]] == 0:
+                        actions[pid_toid[player['id']]] = -1
                         continue
                 for i in range(len(history) - 1, -1, -1):
                     if 'playerId' not in history[i] or 'amount' not in history[i]:
@@ -535,13 +535,13 @@ def potential(game_state):
                     if history[i]['playerId'] == player['id']:
                         amount = history[i]['amount']
                         break
-                betted = player['chipsBet'] - past_bets[pid_to_id[player['id']]] - amount
+                betted = player['chipsBet'] - past_bets[pid_toid[player['id']]] - amount
                 if betted > 0:
-                    actions[pid_to_id[player['id']]] = 2
+                    actions[pid_toid[player['id']]] = 2
                 elif betted == 0:
-                    actions[pid_to_id[player['id']]] = 1
+                    actions[pid_toid[player['id']]] = 1
                 if player['status'] == 'folded':
-                    actions[pid_to_id[player['id']]] = 0
+                    actions[pid_toid[player['id']]] = 0
 
                 if player['chips'] + player['chipsBet'] != 0:
                     past_ratio = player['chipsBet'] / (player['chips'] + player['chipsBet'])
@@ -555,9 +555,9 @@ def potential(game_state):
                     past_ratio = 2
                 else:
                     past_ratio = 3
-                past_ratios[pid_to_id[player['id']]] = past_ratio
-                past_chips[pid_to_id[player['id']]] = player['chips']
-                past_bets[pid_to_id[player['id']]] = player['chipsBet']
+                past_ratios[pid_toid[player['id']]] = past_ratio
+                past_chips[pid_toid[player['id']]] = player['chips']
+                past_bets[pid_toid[player['id']]] = player['chipsBet']
     lose_rate, draw_rate, win_rate = win_lose_prob(card_preprocess(state['players'][state['me']]['cards']),
                                                    card_preprocess(state['commonCards']),
                                                    actions, past_ratios, num_players)

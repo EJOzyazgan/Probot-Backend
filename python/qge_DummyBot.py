@@ -184,17 +184,17 @@ ALL_CARDS = [Card(value, suit) for value in VALUES for suit in SUITS]
 class Deck:
     def __init__(self):
         self.cards = ALL_CARDS[:]
-        self.next_card_idx = 0
+        self.next_cardidx = 0
         self.shuffle()
 
     def draw(self):
-        result = self.cards[self.next_card_idx]
-        self.next_card_idx += 1
+        result = self.cards[self.next_cardidx]
+        self.next_cardidx += 1
         return result
 
     def shuffle(self):
         random.shuffle(self.cards)
-        self.next_card_idx = 0
+        self.next_cardidx = 0
 
 
 # Analyzes games of Texas Hold'em.

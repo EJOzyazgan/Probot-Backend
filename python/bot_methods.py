@@ -3,12 +3,7 @@ import random
 
 # Folds every time, id a call if game_state.callAmount == 0
 def parzival(game_state):
-    my_bot = game_state['state']['players'][game_state['state']['me']]
-    half_buyin = game_state['state']['buyin'] * 0.5
-
-    if my_bot['chips'] < half_buyin:
-        return my_bot['chips'] * 0.75
-    return game_state['state']['callAmount']
+    return 0
 
 
 # Call every time
