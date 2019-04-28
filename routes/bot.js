@@ -48,7 +48,7 @@ router.get('/clear/tournaments', async (req, res) => {
     await Bot.find({}, (err, bots) => {
         bots.forEach(bot => {
             bot.tournaments = [];
-            Bot.findByIdAndUpdate(bot._id, bot, {new: true}, () => {
+            Bot.findByIdAndUpdate(bot.id, bot, {new: true}, () => {
             });
         });
         if (err) return res.status(400).send("Bots Tournaments Cleared Error");

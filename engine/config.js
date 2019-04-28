@@ -29,7 +29,7 @@ const config = {
   MAX_GAMES: Infinity,
 
   // the amount of initial chips for each player
-  BUYIN: 500,
+  BUYIN: 100,
 
   // the progression of small blinds
   SMALL_BLINDS: [5, 10, 25, 50, 75, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000],
@@ -50,12 +50,12 @@ const config = {
   // the value of a placement changes in function of the number of players
   AWARDS: [
     [1, 0],
-    [2, 0, -1],
-    [2, 1, 0, -1],
-    [3, 1, 0, -1, -2],
-    [5, 2, 0, -1, -2, -3],
-    [7, 3, 0, -1, -2, -3, -4],
-    [10, 4, 1, 0, -1, -2, -4, -6]
+    [2, 1, 0],
+    [3, 2, 1, 0],
+    [4, 3, 2, 1, 0],
+    [5, 2, 0, 2, 1, 0],
+    [6, 5, 4, 3, 2, 1, 0],
+    [7, 6, 5, 4, 3, 2, 1, 0]
   ]
 
 };

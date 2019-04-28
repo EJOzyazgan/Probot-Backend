@@ -322,9 +322,9 @@ const actions = {
 
 function cleanHistory(id, history) {
     let cleanHistory = history;
-    for (let update of cleanHistory){
-        for (let player of update.players){
-            if(player.id !== id)
+    for (let update of cleanHistory) {
+        for (let player of update.players) {
+            if (player.id !== id)
                 player.cards = [];
         }
     }
@@ -343,6 +343,7 @@ function cleanHistory(id, history) {
  * @returns {Boolean} true when the input parameter is a valid "player" object; false otherwise
  */
 function isValidPlayer(player) {
+    console.log(player.id, player.name, player.serviceUrl);
     return player.id && player.name && player.serviceUrl;
 }
 

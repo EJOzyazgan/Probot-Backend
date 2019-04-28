@@ -48,7 +48,7 @@ router.get('/get/:id', auth.required, (req, res) => {
 });
 
 router.post('/get/users', auth.required, (req, res) => {
-    User.find({_id: {$ne: req.body.userId}}).then((user) => {
+    User.find({id: {$ne: req.body.userId}}).then((user) => {
         res.send(user);
     }).catch((e) => {
         res.status(400).send(e);
