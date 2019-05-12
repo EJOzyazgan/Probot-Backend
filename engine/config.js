@@ -13,7 +13,7 @@ const config = {
 
   // time (expressed in ms) to wait after a bet,
   // before a new one can start
-  BETWAIT: 2000,
+  BETWAIT: 3000,
 
   // define the warm up phase of the tournament.
   // for the first WARMUP.GAME games of the tournament,

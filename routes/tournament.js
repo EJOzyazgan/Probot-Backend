@@ -172,10 +172,13 @@ function saveGame(data, done) {
             console.log(`An error occurred while saving ${data.type} updates.`);
             console.log(err.message);
         }
-        if (savedGame.gameId === 3) {
+
+        app.io.sockets.in(data.tournamentId).emit('gameOver', {data: savedGame});
+
+        if (savedGame.gameId === 5) {
             quitTournament(savedGame.tournamentId);
         }
-        app.io.sockets.in(data.tournamentId).emit('gameOver', {data: savedGame});
+
         done();
     });
 }
