@@ -24,10 +24,10 @@ router.post('/login', auth.optional, async (req, res, next) => {
             const user = passportUser;
             user.token = passportUser.generateJWT();
 
-            return res.json({ user: user.toAuthJSON() });
+            return res.status(200).json({ user: user.toAuthJSON() });
         }
 
-        return res.status(400).info;
+        return res.status(400).send('Email or Password Incorrect');
     })(req, res, next);
 });
 
@@ -49,7 +49,7 @@ router.get('/get/:id', auth.required, (req, res) => {
 
 router.post('/get/users', auth.required, (req, res) => {
     User.find({id: {$ne: req.body.userId}}).then((user) => {
-        res.send(user);
+        res.status(200).json(user);
     }).catch((e) => {
         res.status(400).send(e);
     });
