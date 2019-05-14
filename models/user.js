@@ -3,15 +3,58 @@ const validator = require('validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const moment = require('moment');
 
 let UserSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
         validate: {
-            validator: validator.isEmail,
+            validator: function (v) {
+                return validator.isEmail(v)
+            },
             message: '{VALUE} is not a valid email'
         }
+    },
+    createdAt: {
+        type: Date,
+        default: moment.utc()
+    },
+    lastLogedIn: {
+        type: Date,
+        default: moment.utc()
+    },
+    daysLoggedIn: {
+        type: Number,
+        default: 1
+    },
+    chips: {
+        type: Number,
+        default: 1000
+    },
+    rankClass: {
+        type: String,
+        default: 'Bronze'
+    },
+    rank: {
+        type: Number,
+        default: 0
+    },
+    totalWinnings: {
+        type: Number,
+        default: 0
+    },
+    friends: {
+        type: [String],
+        default: []
+    },
+    icon: {
+        type: String,
+        default: 'default'
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
     },
     salt: {
         type: String,

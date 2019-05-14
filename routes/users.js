@@ -11,7 +11,8 @@ router.post('/create', auth.optional, async (req, res) => {
     finalUser.setPassword(user.password);
 
     return finalUser.save()
-        .then(() => res.json({ user: finalUser.toAuthJSON() }));
+        .then(() => res.status(200).json({ user: finalUser.toAuthJSON() }))
+        .catch(err => res.status(400).json(err));
 });
 
 router.post('/login', auth.optional, async (req, res, next) => {
