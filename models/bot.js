@@ -10,12 +10,24 @@ let BotSchema = new mongoose.Schema({
         required: true
     },
     tournaments: {
-        type: [JSON],
+        type: [String],
         default: []
     },
     userId: {
         type: String,
         required: true
+    },
+    handsPlayed: {
+        type: Number,
+        default: 0
+    },
+    handsWon: {
+      type: Number,
+      default: 0
+    },
+    lastPlayed: {
+        type: Date,
+        default: null
     }
 });
 
