@@ -1,4 +1,3 @@
-
 'use strict';
 
 const config = require('../config');
@@ -19,7 +18,6 @@ const asyncFrom = require('./lib/loop-from-async');
 const sleep = require('sleep-promise');
 
 
-
 /**
  * @function
  * @name betLoop
@@ -32,116 +30,112 @@ const sleep = require('sleep-promise');
  *
  * @returns {void}
  */
-exports = module.exports = function* betLoop(gs){
+exports = module.exports = function* betLoop(gs) {
 
-  logger.info('Hand %d/%d, starting betting session', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
-
-
-  const deck_ = Symbol.for('cards-deck');
-  const hasBB_ = Symbol.for('has-big-blind');
-  const hasDB_ = Symbol.for('has-dealer-button');
-  const hasTalked_ = Symbol.for('has-talked');
-
-  // the betting loop continues until
-  // all the community cards are shown
-  // and there are more than an active player
-  while (gs.commonCards.length <= 5 && gs.activePlayers.length > 1){
+    logger.info('Hand %d/%d, starting betting session', gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
 
 
+    const deck_ = Symbol.for('cards-deck');
+    const hasBB_ = Symbol.for('has-big-blind');
+    const hasDB_ = Symbol.for('has-dealer-button');
+    const hasTalked_ = Symbol.for('has-talked');
 
-    // track the current hand session
-    gs.session = getGameSession(gs.commonCards.length);
-
-
-
-    logger.log('debug', 'Hand %d/%d, %s', gs.gameProgressiveId, gs.handProgressiveId, gs.session, { tag: gs.handUniqueId });
-    logger.log('debug', getPlayerStatusLogMessage(gs.players), { tag: gs.handUniqueId });
-
-
-
-    // count the number of time that players had already have the possibility
-    // to bet in the current session.
-    gs.spinCount = 0;
-
-    const starterButton = gs.session === gameSession.pre ? hasBB_ : hasDB_;
-    const startIndex = gs.players.findIndex(player => player[starterButton]);
-
-    do {
-
-      yield* asyncFrom(gs.players, startIndex, shouldBreak.bind(null, gs),
-          player => shouldBet(gs, player, async player => {
-          player.talk(gs).then(player.payBet.bind(player, gs));
-
-          if (config.BETWAIT){
-            await sleep(config.BETWAIT);
-          }
-        }));
-
-      gs.spinCount++;
-
-    } while(!isBetRoundFinished(gs.activePlayers, gs.callAmount));
+    // the betting loop continues until
+    // all the community cards are shown
+    // and there are more than an active player
+    while (gs.commonCards.length <= 5 && gs.activePlayers.length > 1) {
 
 
-    // when a betting round ends
-    // raise data should be cleared
-    gs.lastRaiseAmount = 0;
-
-    // ... and the pot should be re-opened
-    // for the next iteration
-    gs.players.forEach(player => delete(player[hasTalked_]));
+        // track the current hand session
+        gs.session = getGameSession(gs.commonCards.length);
 
 
+        logger.log('debug', 'Hand %d/%d, %s', gs.gameProgressiveId, gs.handProgressiveId, gs.session, {tag: gs.handUniqueId});
+        logger.log('debug', getPlayerStatusLogMessage(gs.players), {tag: gs.handUniqueId});
 
 
+        // count the number of time that players had already have the possibility
+        // to bet in the current session.
+        gs.spinCount = 0;
 
-    // when execution reach this line,
-    // all players have defined their bet for the current session.
+        const starterButton = gs.session === gameSession.pre ? hasBB_ : hasDB_;
+        const startIndex = gs.players.findIndex(player => player[starterButton]);
 
-    const activePlayers = gs.activePlayers;
+        do {
 
-    if (activePlayers.length === 1){
+            yield* asyncFrom(gs.players, startIndex, shouldBreak.bind(null, gs),
+                player => shouldBet(gs, player, async player => {
 
-      // only one active player.
-      // the betting loop is completed
+                    player.talk(gs).then(player.payBet.bind(player, gs));
 
-      const winner = activePlayers[0];
+                    if (config.BETWAIT) {
+                        await sleep(config.BETWAIT);
+                    }
+                }));
 
-      return void logger.info('Hand %d/%d, after the %s session, the only active player is %s',
-        gs.gameProgressiveId, gs.handProgressiveId, gs.session, winner.name, { tag: gs.handUniqueId });
+            gs.spinCount++;
+
+        } while (!isBetRoundFinished(gs.activePlayers, gs.callAmount));
+
+        // when a betting round ends
+        // raise data should be cleared
+        gs.lastRaiseAmount = 0;
+
+        // ... and the pot should be re-opened
+        // for the next iteration
+        gs.players.forEach(player => delete (player[hasTalked_]));
+
+
+        // when execution reach this line,
+        // all players have defined their bet for the current session.
+
+        const activePlayers = gs.activePlayers;
+
+        if (activePlayers.length === 1) {
+
+            // only one active player.
+            // the betting loop is completed
+
+            const winner = activePlayers[0];
+
+            return void logger.info('Hand %d/%d, after the %s session, the only active player is %s',
+                gs.gameProgressiveId, gs.handProgressiveId, gs.session, winner.name, {tag: gs.handUniqueId});
+
+        } else if (gs.commonCards.length < 5) {
+
+            do {
+                gs.commonCards.push(gs[deck_].shift());
+            } while (gs.commonCards.length < 3);
+
+
+            // update hand session
+            gs.session = getGameSession(gs.commonCards.length);
+
+
+            logger.log('debug', 'Hand %d/%d, common cards (%s) are %s',
+                gs.gameProgressiveId, gs.handProgressiveId, gs.session, getCommonCardsLogMessage(gs.commonCards), {tag: gs.handUniqueId});
+
+            yield save({
+                type: 'cards',
+                handId: gs.handUniqueId,
+                session: gs.session,
+                commonCards: gs.session === gameSession.flop ? gs.commonCards : gs.commonCards.slice(-1),
+                players: gs.players
+            });
+
+        } else {
+
+            logger.log('debug', 'Hand %d/%d, after the %s session', gs.gameProgressiveId, gs.handProgressiveId, gs.session, {tag: gs.handUniqueId});
+            logger.log('debug', getPlayerStatusLogMessage(gs.players), {tag: gs.handUniqueId});
+
+            return void logger.info('Hand %d/%d, betting session is finished.',
+                gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
+        }
+
 
     }
-    else if (gs.commonCards.length < 5){
-
-      do { gs.commonCards.push(gs[deck_].shift()); } while(gs.commonCards.length < 3);
-
-
-      // update hand session
-      gs.session = getGameSession(gs.commonCards.length);
-
-
-      logger.log('debug', 'Hand %d/%d, common cards (%s) are %s',
-        gs.gameProgressiveId, gs.handProgressiveId, gs.session, getCommonCardsLogMessage(gs.commonCards), { tag: gs.handUniqueId });
-
-      yield save({ type: 'cards', handId: gs.handUniqueId, session: gs.session,
-        commonCards: gs.session === gameSession.flop ? gs.commonCards : gs.commonCards.slice(-1), players: gs.players});
-
-    }
-    else {
-
-      logger.log('debug', 'Hand %d/%d, after the %s session', gs.gameProgressiveId, gs.handProgressiveId, gs.session, { tag: gs.handUniqueId });
-      logger.log('debug', getPlayerStatusLogMessage(gs.players), { tag: gs.handUniqueId });
-
-      return void logger.info('Hand %d/%d, betting session is finished.',
-        gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
-    }
-
-
-  }
 
 };
-
-
-
 
 
 /**
@@ -156,20 +150,18 @@ exports = module.exports = function* betLoop(gs){
  *
  * @returns {GameSession}
  */
-function getGameSession(commonCards){
-  switch(commonCards){
-    case 0:
-      return gameSession.pre;
-    case 3:
-      return gameSession.flop;
-    case 4:
-      return gameSession.turn;
-    case 5:
-      return gameSession.river;
-  }
+function getGameSession(commonCards) {
+    switch (commonCards) {
+        case 0:
+            return gameSession.pre;
+        case 3:
+            return gameSession.flop;
+        case 4:
+            return gameSession.turn;
+        case 5:
+            return gameSession.river;
+    }
 }
-
-
 
 
 /**
@@ -192,18 +184,16 @@ function getGameSession(commonCards){
  */
 function isBetRoundFinished(activePlayers, callAmount) {
 
-  if (activePlayers.length === 1){
-    return true;
-  }
+    if (activePlayers.length === 1) {
+        return true;
+    }
 
-  const allin_ = Symbol.for('is-all-in');
+    const allin_ = Symbol.for('is-all-in');
 
-  // search for active players who are not all in,
-  // and still have bet less than the minimum amount to stay active
-  return activePlayers.find(player => !player[allin_] && player.chipsBet < callAmount) == null;
+    // search for active players who are not all in,
+    // and still have bet less than the minimum amount to stay active
+    return activePlayers.find(player => !player[allin_] && player.chipsBet < callAmount) == null;
 }
-
-
 
 
 /**
@@ -218,15 +208,13 @@ function isBetRoundFinished(activePlayers, callAmount) {
  *
  * @returns {String}
  */
-function getPlayerStatusLogMessage(players){
-  return players.reduce(function(msg, player) {
-    msg += player.status === playerStatus.out ?
-      `${player.name} is out. ` : `${player.name} has bet ${player.chipsBet} (${player.status}). `;
-    return msg;
-  }, '').trim().slice(0,-1);
+function getPlayerStatusLogMessage(players) {
+    return players.reduce(function (msg, player) {
+        msg += player.status === playerStatus.out ?
+            `${player.name} is out. ` : `${player.name} has bet ${player.chipsBet} (${player.status}). `;
+        return msg;
+    }, '').trim().slice(0, -1);
 }
-
-
 
 
 /**
@@ -241,8 +229,8 @@ function getPlayerStatusLogMessage(players){
  *
  * @returns {String}
  */
-function getCommonCardsLogMessage(cards){
-  return cards.reduce(function(msg, card){
-    return msg += `${card.rank}${card.type}, `, msg;
-  }, '').trim().slice(0,-1);
+function getCommonCardsLogMessage(cards) {
+    return cards.reduce(function (msg, card) {
+        return msg += `${card.rank}${card.type}, `, msg;
+    }, '').trim().slice(0, -1);
 }

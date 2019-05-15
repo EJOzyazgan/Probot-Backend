@@ -34,8 +34,13 @@ router.post('/start/game', async (req, res) => {
     const tournamentId = '' + req.body.tournament._id + '-' + gameId;
     console.log(tournamentId);
     // console.log(getBots(req.body.match.bots));
-    engine.start(tournamentId, getBots(req.body.match.bots));
+    engine.start(tournamentId, req.body.match.bots);
     return res.status(200).json({message: 'Match Started'})
+});
+
+router.post('/game/join', async (req, res) => {
+    engine.join(req.body.tournamentId, req.body.bots);
+    return res.status(200).json({message: 'Joined Match'})
 });
 
 router.post('/bracket/create', async (req, res) => {

@@ -1,8 +1,6 @@
-
 'use strict';
 
 const playerStatus = require('../domain/player-status');
-
 
 
 /**
@@ -15,33 +13,43 @@ const playerStatus = require('../domain/player-status');
  *
  * @returns void
  */
-exports = module.exports = function resetGamestate(gs){
+exports = module.exports = function resetGamestate(gs) {
 
-  gs.pot = gs.callAmount = 0;
+    gs.pot = gs.callAmount = 0;
 
-  gs.sidepots = [];
-  gs.commonCards = [];
+    gs.sidepots = [];
+    gs.commonCards = [];
 
 
-  const allin_ = Symbol.for('is-all-in');
-  const hasBB_ = Symbol.for('has-big-blind');
+    const allin_ = Symbol.for('is-all-in');
+    const hasBB_ = Symbol.for('has-big-blind');
 
-  gs.players.forEach(function(player){
+    gs.players = gs.players.filter((player) => {
+        return !player.willLeave
+    });
 
-    [hasBB_, allin_].forEach(function(symb) { delete player[symb]; });
+    gs.players.forEach(function (player) {
 
-    // players who have folded in the previous hand
-    // should be re-activated
-    if (player.status == playerStatus.folded){
-      player.status = playerStatus.active;
-    }
+        [hasBB_, allin_].forEach(function (symb) {
+            delete player[symb];
+        });
 
-    player.chipsBet = 0;
+        // players who have folded in the previous hand
+        // should be re-activated
+        if (player.status === playerStatus.folded) {
+            player.status = playerStatus.active;
+        }
 
-    player.cards = [];
-    player.bestCombination = [];
-    player.bestCombinationData = null;
+        else if (player.willJoin) {
+            player.willJoin = false;
+        }
 
-  });
+        player.chipsBet = 0;
+
+        player.cards = [];
+        player.bestCombination = [];
+        player.bestCombinationData = null;
+
+    });
 
 };

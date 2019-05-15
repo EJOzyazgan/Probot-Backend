@@ -68,19 +68,28 @@ const actions = {
      *
      * @param {Object} gs:
      *  the gamestate object
-     * @param {Number}
+     * @param {Number} betAmount
      *  the amount of chips the player has to pay
      *
      * @returns {Promise} a promise resolved when bet data is stored
      */
     payBet(gs, betAmount) {
 
+        if(betAmount < 0 && !this.willLeave) {
+            this.leave(gs);
+        }
+
+        if(this.willJoin){
+            this.status = playerStatus.join;
+
+            logger.log('info', '%s (%s) waiting to join.', this.name, this.id, {tag: gs.handUniqueId});
+            return Promise.resolve();
+        }
+
         // normalize betAmount to the maximum value the player can pay
         betAmount = Math.min(this.chips, betAmount);
 
-
         const playerCallAmount = Math.max(gs.callAmount - this.chipsBet, 0);
-
 
         if (betAmount < playerCallAmount && betAmount < this.chips) {
             // when a player bets less than the minimum required amount,
@@ -131,7 +140,6 @@ const actions = {
             }
         }
 
-
         logger.log('debug', '%s (%s) has bet %d.', this.name, this.id, betAmount, {tag: gs.handUniqueId});
 
         this[hasTalked_] = true;
@@ -172,6 +180,12 @@ const actions = {
             status: playerStatus.folded,
             players: gs.players
         });
+    },
+
+    leave(gs) {
+        this.willLeave = true;
+
+        logger.log('info', '%s (%s) will leave.', this.name, this.id, {tag: gs.handUniqueId});
     },
 
 
@@ -343,7 +357,6 @@ function cleanHistory(id, history) {
  * @returns {Boolean} true when the input parameter is a valid "player" object; false otherwise
  */
 function isValidPlayer(player) {
-    console.log(player.id, player.name, player.serviceUrl);
     return player.id && player.name && player.serviceUrl;
 }
 
@@ -361,7 +374,7 @@ function sanitizeAmount(amount) {
     if (typeof amount != 'number') {
         amount = Number.parseInt(amount, 10);
     }
-    return amount > 0 ? amount : 0;
+    return amount > -2 ? amount : 0;
 }
 
 /**
@@ -406,11 +419,17 @@ exports = module.exports = function factory(obj) {
 
     const player = Object.create(actions);
 
+    player.id = obj.id;
+
     ['id', 'name', 'serviceUrl']
-        .forEach(prop => Object.defineProperty(player, prop, {value: obj[prop]}))
+        .forEach(prop => Object.defineProperty(player, prop, {value: obj[prop]}));
 
     // status of the player
     player.status = playerStatus.active;
+
+    player.willLeave = false;
+
+    player.willJoin = true;
 
     // amount of chips available
     player.chips = config.BUYIN;
@@ -429,4 +448,4 @@ exports = module.exports = function factory(obj) {
 
     return player;
 
-}
+};

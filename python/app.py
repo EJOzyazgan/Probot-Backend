@@ -81,5 +81,7 @@ def get_bot():
         return str(bot_methods.uc_my_cards(request.json))
     elif player['id'] == "5cc4941aa960de667cfd69bd":
         return str(bot_methods.deez_botz(request.json))
+    elif player['id'] == "5c7b86475898d33c8000f05d":
+        return print(str(bot_methods.leave_bot(request.json)))
 
     return str(0)

@@ -1,8 +1,23 @@
 import random
 
 
+def leave_bot(game_state):
+    gs = game_state['state']
+
+    print(gs['hand'])
+
+    if gs['hand'] == 2:
+        print('leave')
+        return -1
+    return 0
+
+
 # Folds every time, id a call if game_state.callAmount == 0
 def parzival(game_state):
+    gs = game_state['state']
+
+    if gs['hand'] == 2:
+        return -1
     return 0
 
 

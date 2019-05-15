@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 let TableSchema = new mongoose.Schema({
-    pot: {
-        type: String,
-        defaultValue: null
+    buyIn: {
+        type: Number,
+        default: 50
     }
 });
 

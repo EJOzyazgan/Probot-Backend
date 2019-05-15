@@ -75,8 +75,9 @@ const gamestate = Object.create(EventEmitter.prototype, {
 
       this[tournaments_].set(tournamentId, gs);
 
-      logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), { tag: gs.handUniqueId });
+      // return console.log(gs.players);
 
+      logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), { tag: gs.handUniqueId });
 
       // start the game
       return void run(gameloop, gs)
@@ -140,6 +141,14 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return;
 
       gs.tournamentStatus = tournamentStatus.play;
+    }
+  },
+
+  join: {
+    value: function(tournamentId, players) {
+      const gs = this[tournaments_].get(tournamentId);
+
+      gs.players = gs.players.concat(players.map(createPlayer).filter(x => x != null));
     }
   },
 

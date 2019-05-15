@@ -14,4 +14,6 @@ status.folded = 'folded';
 // he won't partecipate to any other hand in the current game
 status.out = 'out';
 
+status.join = 'join';
+
 exports = module.exports = Object.freeze(status);
