@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Table = require('./table').schema;
 
 let BotSchema = new mongoose.Schema({
     name: {
@@ -28,6 +29,14 @@ let BotSchema = new mongoose.Schema({
     lastPlayed: {
         type: Date,
         default: null
+    },
+    currentTable: {
+      type: String,
+      default: null
+    },
+    tablesPlayed: {
+        type: [Table],
+        default: []
     }
 });
 

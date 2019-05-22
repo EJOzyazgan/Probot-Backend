@@ -11,6 +11,7 @@ const bodyParser = require('body-parser');
 const usersRouter = require('./routes/users');
 const tournamentRouter = require('./routes/tournament');
 const botRouter = require('./routes/bot');
+const tableRouter = require('./routes/table');
 
 const port = process.env.PORT || 3000;
 
@@ -51,6 +52,7 @@ app.use(bodyParser.json());
 app.use('/tournament', tournamentRouter);
 app.use('/user', usersRouter);
 app.use('/bot', botRouter);
+app.use('/table', tableRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
