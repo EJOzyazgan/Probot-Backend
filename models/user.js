@@ -20,7 +20,7 @@ let UserSchema = new mongoose.Schema({
         type: Date,
         default: moment.utc()
     },
-    lastLogedIn: {
+    lastLoggedIn: {
         type: Date,
         default: moment.utc()
     },

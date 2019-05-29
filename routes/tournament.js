@@ -38,11 +38,6 @@ router.post('/start/game', async (req, res) => {
     return res.status(200).json({message: 'Match Started'})
 });
 
-router.post('/game/join', async (req, res) => {
-    engine.join(req.body.tournamentId, req.body.bots);
-    return res.status(200).json({message: 'Joined Match'})
-});
-
 router.post('/bracket/create', async (req, res) => {
     let bracket = new Bracket(req.body);
     let numDivisions = 1;

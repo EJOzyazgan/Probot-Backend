@@ -1,9 +1,13 @@
 const {Bot} = require('../models/bot');
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 
-router.get('/:id', (req, res, next) => {
-    res.send('get bot');
+router.get('/:id', auth.required, (req, res, next) => {
+    Bot.findOne({userId: req.params.id}, (err, bot) => {
+        if (err) return res.status(400).json({message: "Error retrieving bot", error: err});
+        res.status(200).json(bot);
+    });
 });
 
 router.post('/create', async (req, res) => {
@@ -11,24 +15,28 @@ router.post('/create', async (req, res) => {
 
     await bot.save((err, bot) => {
         if (err) return res.status(400).send(err);
-        res.status(200).send("Bot Saved");
+        res.status(200).json(bot);
     });
 });
 
-router.post('/update', async (req, res) => {
-    await Bot.findByIdAndUpdate(req.body.id, {
-        $set: {
-            name: req.body.name,
-            serviceUrl: req.body.serviceUrl
+router.patch('/patch', auth.required, (req, res) => {
+    console.log(req.body);
+    Bot.findOneAndUpdate({_id: req.body._id}, req.body, {new: true}).then((bot, err) => {
+        if (err)
+            return res.status(400).json({message: "Couldn't Patch Bot", error: err});
+        return res.status(200).json(bot);
+    });
+});
+
+router.post('/register', auth.required, async (req, res) => {
+    Bot.findByIdAndUpdate(req.body.id, {
+        $addToSet: {
+            tournaments: {
+                tournamentId: req.body.tournamentId,
+                score: 0
+            }
         }
     }, {new: true}, (err, bot) => {
-        if (err) return res.status(400).send("Bot Update Error");
-        res.status(200).send("Bot Updated");
-    });
-});
-
-router.post('/register', async (req, res) => {
-    Bot.findByIdAndUpdate(req.body.id, {$addToSet: {tournaments: {tournamentId: req.body.tournamentId, score: 0}}}, {new: true}, (err, bot) => {
         if (err) return res.status(400).send(err);
         res.status(200).send("Bot Registered");
     });

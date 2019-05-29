@@ -11,21 +11,21 @@ router.post('/create', auth.optional, async (req, res) => {
     finalUser.setPassword(user.password);
 
     return finalUser.save()
-        .then(() => res.status(200).json({ user: finalUser.toAuthJSON() }))
+        .then(() => res.status(200).json({user: finalUser.toAuthJSON()}))
         .catch(err => res.status(400).json(err));
 });
 
 router.post('/login', auth.optional, async (req, res, next) => {
-    return passport.authenticate('user', { session: false }, (err, passportUser, info) => {
-        if(err) {
+    return passport.authenticate('user', {session: false}, (err, passportUser, info) => {
+        if (err) {
             return next(err);
         }
 
-        if(passportUser) {
+        if (passportUser) {
             const user = passportUser;
             user.token = passportUser.generateJWT();
 
-            return res.status(200).json({ user: user.toAuthJSON() });
+            return res.status(200).json({user: user.toAuthJSON()});
         }
 
         return res.status(400).send('Email or Password Incorrect');
@@ -53,6 +53,14 @@ router.post('/get/users', auth.required, (req, res) => {
         res.status(200).json(user);
     }).catch((e) => {
         res.status(400).send(e);
+    });
+});
+
+router.patch('/patch', auth.required, (req, res) => {
+    User.findOneAndUpdate({id: req.body.id}, req.body, {new: true}).then((user, err) => {
+        if (err)
+            return res.status(400).json({message: "Couldn't Patch User", error: err});
+        return res.status(200).json(user);
     });
 });
 
