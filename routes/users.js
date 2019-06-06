@@ -1,70 +1,108 @@
 const express = require('express');
 const router = express.Router();
-const {User} = require('../models/user');
+const models = require('../models');
+const User = models.User;
 const passport = require('passport');
-const auth = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 
-router.post('/create', auth.optional, async (req, res) => {
-    let user = req.body;
-
-    const finalUser = new User(user);
-    finalUser.setPassword(user.password);
-
-    return finalUser.save()
-        .then(() => res.status(200).json({user: finalUser.toAuthJSON()}))
-        .catch(err => res.status(400).json(err));
+router.post('/create', async (req, res) => {
+    User.create(req.body)
+        .then((user) => res.status(200).json(user))
+        .catch((error) => {
+            console.log(error);
+            res.status(400).json({message: 'Error creating user', error: error});
+        });
 });
 
-router.post('/login', auth.optional, async (req, res, next) => {
-    return passport.authenticate('user', {session: false}, (err, passportUser, info) => {
-        if (err) {
-            return next(err);
+router.post('/login', async (req, res, next) => {
+    User.findOne({
+        where: {
+            email: req.body.email
         }
-
-        if (passportUser) {
-            const user = passportUser;
-            user.token = passportUser.generateJWT();
-
-            return res.status(200).json({user: user.toAuthJSON()});
+    }).then((user) => {
+        if (!user) {
+            return res.status(400).send({
+                message: 'Authentication failed. User not found.',
+            });
         }
-
-        return res.status(400).send('Email or Password Incorrect');
-    })(req, res, next);
+        user.comparePassword(req.body.password, (err, isMatch) => {
+            if (isMatch && !err) {
+                let token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.JWTSecretKey, {expiresIn: 86400 * 30});
+                jwt.verify(token, process.env.JWTSecretKey, function (err, data) {
+                    if (err)
+                        console.log(err);
+                });
+                res.json({success: true, token: token});
+            } else {
+                res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
+            }
+        })
+    }).catch((error) => res.status(400).send(error));
 });
 
-router.post('/exists', auth.optional, (req, res) => {
-    User.find({email: req.body.email}).then((users) => {
-        res.status(200).send(users);
-    }).catch((e) => {
-        res.status(400).send(e);
-    })
+router.post('/exists', async (req, res) => {
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then((user) => {
+        if (!user) {
+            return res.status(200).json({
+                exists: false,
+                message: 'Email not already used',
+            });
+        }
+        return res.status(200).json({
+            exists: true,
+            message: 'Email already used',
+        });
+    }).catch((error) => res.status(400).json({message: 'Error finding account', error: error}));
 });
 
-router.get('/get/:id', auth.required, (req, res) => {
-    User.findById(req.params.id).then((user) => {
-        res.status(200).send(user);
-    }).catch((e) => {
-        res.status(400).send(e);
-    })
-});
-
-router.post('/get/users', auth.required, (req, res) => {
-    User.find({id: {$ne: req.body.userId}}).then((user) => {
-        res.status(200).json(user);
-    }).catch((e) => {
-        res.status(400).send(e);
-    });
-});
-
-router.patch('/patch', auth.required, (req, res) => {
-    User.findOneAndUpdate({id: req.body.id}, req.body, {new: true}).then((user, err) => {
-        if (err)
-            return res.status(400).json({message: "Couldn't Patch User", error: err});
+router.get('/get/:id', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    console.log(req.params);
+    User.findOne({
+        where: {
+            id: req.params.id
+        },
+        attributes: { exclude: ['password', 'isAdmin'] },
+        include: [{
+            as: 'bots',
+            model:  models.Bot
+        }]
+    }).then((user) => {
         return res.status(200).json(user);
+    }).catch((e) => {
+        res.status(400).json({message: 'Error finding user', error: e});
     });
 });
 
-router.delete('/delete', auth.required, (req, res) => {
+router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    User.update({
+        email: req.body.email,
+        password: req.body.password,
+        lastLoggedIn: req.body.lastLoggedIn,
+        daysLoggedIn: req.body.daysLoggedIn,
+        chips: req.body.chips,
+        rankClass: req.body.rankClass,
+        rank: req.body.rank,
+        totalWinnings: req.body.totalWinnings,
+        friends: req.body.friends,
+        icon: req.body.icon,
+        isAdmin: req.body.isAdmin
+    }, {
+        where: {
+            id: req.params.id
+        },
+        returning: true
+    }).then(([ rowsUpdate, [updatedUser] ]) => {
+        return res.status(200).json(updatedUser);
+    }).catch((e) => {
+        res.status(400).json({message: 'Error updating user', error: e});
+    });
+});
+
+router.delete('/delete', async (req, res) => {
 
 });
 

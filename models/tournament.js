@@ -1,21 +1,27 @@
+'use strict';
+
 const mongoose = require('mongoose');
 const ts = require('../config/tournamet-state');
 
-let TournamentSchema = new mongoose.Schema({
-    state: {
-        type: String,
-        default: ts.registration
-    },
-    maxPlayers: {
-        type: Number,
-        default: 100
-    },
-    name: {
-        type: String,
-        required: true
-    }
-});
+module.exports = (sequalize, DataTypes) => {
+    const Tournament = sequalize.define('Tournament', {
+        state: {
+            type: DataTypes.STRING,
+            defaultValue: ts.registration
+        },
+        maxPlayers: {
+            type: DataTypes.INTEGER,
+            defaultValue: 100
+        },
+        name: {
+            type: DataTypes.STRING,
+            required: true
+        }
+    });
 
-let Tournament = mongoose.model('Tournament', TournamentSchema);
+    return Tournament;
+};
 
-module.exports = {Tournament};
+// let Tournament = mongoose.model('Tournament', TournamentSchema);
+//
+// module.exports = {Tournament};

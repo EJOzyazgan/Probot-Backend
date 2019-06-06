@@ -1,12 +1,15 @@
-const mongoose = require('mongoose');
+'use strict';
 
-let TableSchema = new mongoose.Schema({
-    buyIn: {
-        type: Number,
-        default: 50
-    }
-});
+module.exports = (sequalize, DataTypes) => {
+    const Table = sequalize.define('Table', {
+        buyIn: {
+            type: DataTypes.INTEGER,
+            defaultValue: 50
+        }
+    });
 
-let Table = mongoose.model('Table', TableSchema);
-
-module.exports = {Table};
+    return Table
+};
+    // let Table = mongoose.model('Table', TableSchema);
+    //
+    // module.exports = {Table};

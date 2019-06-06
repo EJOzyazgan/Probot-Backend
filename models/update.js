@@ -1,45 +1,53 @@
-const mongoose = require('mongoose');
+'use strict';
 
-const cardSchema = new mongoose.Schema({
-    rank: { type: String, required: true },
-    type: { type: String, required: true }
-});
+let card = (sequalize, DataTypes) => {
+    return sequalize.define('Card', {
+        rank: {type: DataTypes.STRING, required: true},
+        type: {type: DataTypes.STRING, required: true}
+    });
+};
 
-const playerSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    id: { type: String, required: true },
-    hasDB: Boolean,
-    isAllin: Boolean,
-    chipsBet: Number,
-    chips: Number,
-    cards: [cardSchema],
-    bestCards: [cardSchema],
-    point: String,
-    status: String
-});
+let player = (sequalize, DataTypes) => {
+    return sequalize.define('Player', {
+        name: {type: DataTypes.STRING, required: true},
+        id: {type: DataTypes.STRING, required: true},
+        hasDB: DataTypes.BOOLEAN,
+        isAllin: DataTypes.BOOLEAN,
+        chipsBet: DataTypes.INTEGER,
+        chips: DataTypes.INTEGER,
+        cards: DataTypes.ARRAY(DataTypes.JSON),
+        bestCards: DataTypes.ARRAY(DataTypes.JSON),
+        point: DataTypes.STRING,
+        status: DataTypes.STRING
+    });
+};
 
-const winnerSchema = new mongoose.Schema({
-    id: { type: String, required: true },
-    amount: { type: Number, required: true }
-});
+let winner = (sequalize, DataTypes) => {
+    return sequalize.define('Winner', {
+        id: {type: DataTypes.STRING, required: true},
+        amount: {type: DataTypes.INTEGER, required: true}
+    });
+};
 
-const UpdateSchema = new mongoose.Schema({
-    tournamentId: { type: String, required: true },
-    gameId: { type: Number, required: true },
-    handId: { type: Number, required: true },
-    type: { type: String, required: true, enum: ['setup', 'bet', 'cards', 'status', 'showdown', 'win'] },
-    pot: Number,
-    sb: Number,
-    players: [playerSchema],
-    session: { type: String, enum: ['pre-flop', 'flop', 'turn', 'river'] },
-    commonCards: [cardSchema],
-    playerId: String,
-    amount: Number,
-    status: { type: String, enum: ['folded', 'out'] },
-    winners: [winnerSchema],
-    playerName: String
-});
-
-let Update = mongoose.model('Update', UpdateSchema);
-
-module.exports = {Update};
+module.exports = (sequalize, DataTypes) => {
+    return sequalize.define('Update', {
+        tournamentId: {type: DataTypes.STRING, required: true},
+        gameId: {type: DataTypes.INTEGER, required: true},
+        handId: {type: DataTypes.INTEGER, required: true},
+        type: {type: DataTypes.STRING, required: true, enum: ['setup', 'bet', 'cards', 'status', 'showdown', 'win']},
+        pot: DataTypes.INTEGER,
+        sb: DataTypes.INTEGER,
+        players: DataTypes.ARRAY(DataTypes.JSON),
+        session: {type: DataTypes.STRING, enum: ['pre-flop', 'flop', 'turn', 'river']},
+        commonCards: DataTypes.ARRAY(DataTypes.JSON),
+        playerId: DataTypes.STRING,
+        amount: DataTypes.INTEGER,
+        status: {type: DataTypes.STRING, enum: ['folded', 'out']},
+        winners: DataTypes.ARRAY(DataTypes.JSON),
+        playerName: DataTypes.STRING
+    });
+};
+//
+// let Update = mongoose.model('Update', UpdateSchema);
+//
+// module.exports = {Update};
