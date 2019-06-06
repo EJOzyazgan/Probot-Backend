@@ -1,100 +1,89 @@
-const mongoose = require('mongoose');
-const validator = require('validator');
+'use strict';
+
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const moment = require('moment');
 
-let UserSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: true,
-        validate: {
-            validator: function (v) {
-                return validator.isEmail(v)
-            },
-            message: '{VALUE} is not a valid email'
+module.exports = (sequalize, DataTypes) => {
+    const User = sequalize.define('User', {
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                notNull: {msg: 'Must provide email'},
+                isEmail: true
+            }
+        },
+        password: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                notNull: {msg: 'Must provide password'}
+            }
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            defaultValue: moment.utc()
+        },
+        lastLoggedIn: {
+            type: DataTypes.DATE,
+            defaultValue: moment.utc()
+        },
+        daysLoggedIn: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1
+        },
+        chips: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1000
+        },
+        rankClass: {
+            type: DataTypes.STRING,
+            defaultValue: 'Bronze'
+        },
+        rank: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        totalWinnings: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        friends: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: []
+        },
+        icon: {
+            type: DataTypes.STRING,
+            defaultValue: 'default'
+        },
+        isAdmin: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
-    },
-    createdAt: {
-        type: Date,
-        default: moment.utc()
-    },
-    lastLoggedIn: {
-        type: Date,
-        default: moment.utc()
-    },
-    daysLoggedIn: {
-        type: Number,
-        default: 1
-    },
-    chips: {
-        type: Number,
-        default: 1000
-    },
-    rankClass: {
-        type: String,
-        default: 'Bronze'
-    },
-    rank: {
-        type: Number,
-        default: 0
-    },
-    totalWinnings: {
-        type: Number,
-        default: 0
-    },
-    friends: {
-        type: [String],
-        default: []
-    },
-    icon: {
-        type: String,
-        default: 'default'
-    },
-    isAdmin: {
-        type: Boolean,
-        default: false
-    },
-    salt: {
-        type: String,
-        default: null
-    },
-    hash: {
-        type: String,
-        default: null
-    }
-});
+    });
 
-UserSchema.methods.setPassword = function (password) {
-    this.salt = crypto.randomBytes(16).toString('hex');
-    this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
-};
+    User.beforeSave((user, options) => {
+        if (user.changed('password')) {
+            user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10), null);
+        }
+    });
 
-UserSchema.methods.validatePassword = function (password) {
-    const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
-    return this.hash === hash;
-};
-
-UserSchema.methods.generateJWT = function () {
-    const today = new Date();
-    const expirationDate = new Date(today);
-    expirationDate.setDate(today.getDate() + 60);
-
-    return jwt.sign({
-        email: this.email,
-        id: this.id,
-        exp: parseInt(expirationDate.getTime() / 1000, 10),
-    }, 'secret');
-};
-
-UserSchema.methods.toAuthJSON = function () {
-    return {
-        id: this.id,
-        email: this.email,
-        token: this.generateJWT(),
+    User.prototype.comparePassword = function (passw, cb) {
+        bcrypt.compare(passw, this.password, function (err, isMatch) {
+            if (err) {
+                return cb(err);
+            }
+            cb(null, isMatch);
+        });
     };
-};
 
-let User = mongoose.model('User', UserSchema);
-module.exports = {User};
+    User.associate = models => {
+        User.hasMany(models.Bot, {
+            as: 'bots',
+            onDelete: 'CASCADE',
+            foreignKey: 'userId'
+        });
+    };
+
+    return User;
+};

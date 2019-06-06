@@ -3,10 +3,9 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const {mongoose} = require('./db/mongoose');
 const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
 const bodyParser = require('body-parser');
+const models = require('./models');
 
 const usersRouter = require('./routes/users');
 const tournamentRouter = require('./routes/tournament');
@@ -59,9 +58,11 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-app.use(session({
-  store: new MongoStore({mongooseConnection: mongoose.connection})
-}));
+models.sequelize.sync({alter: true}).then(() => {
+  app.listen(port, () => {
+    console.log(`Listening on port ${port}!`)
+  });
+});
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -74,7 +75,7 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-http.listen(port, () => console.log(`Listening on port ${port}`));
+// http.listen(port, () => console.log(`Listening on port ${port}`));
 
 exports.server = http;
 exports.io = io;

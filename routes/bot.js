@@ -1,34 +1,53 @@
-const {Bot} = require('../models/bot');
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const passport = require('passport');
+const models = require('../models');
+const Bot = models.Bot;
 
-router.get('/:id', auth.required, (req, res, next) => {
-    Bot.findOne({userId: req.params.id}, (err, bot) => {
-        if (err) return res.status(400).json({message: "Error retrieving bot", error: err});
-        res.status(200).json(bot);
+router.get('get/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
+    Bot.findOne({
+        where: {
+            userId: req.params.id
+        }
+    }).then((bot) => {
+        return res.status(200).json(bot);
+    }).catch((e) => {
+        res.status(400).json({message: 'Error finding bot', error: e});
     });
 });
 
 router.post('/create', async (req, res) => {
-    let bot = new Bot(req.body);
+   Bot.create(req.body)
+        .then((bot) => res.status(200).json(bot))
+        .catch((error) => {
+            console.log(error);
+            res.status(400).json({message: 'Error creating bot', error: error});
+        });
+});
 
-    await bot.save((err, bot) => {
-        if (err) return res.status(400).send(err);
-        res.status(200).json(bot);
+router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req, res) => {
+    Bot.update({
+        name: req.body.name,
+        serviceUrl: req.body.serviceUrl,
+        tournaments: req.body.tournaments,
+        handsPlayed: req.body.handsPlayed,
+        handsWon: req.body.handsWon,
+        lastPlayed: req.body.lastPlayed,
+        currentTable: req.body.currentTable,
+        tablesPlayed: req.body.tablesPlayed
+    }, {
+        where: {
+            id: req.params.id
+        },
+        returning: true
+    }).then(([ rowsUpdate, [updatedBot] ]) => {
+        return res.status(200).json(updatedBot);
+    }).catch((e) => {
+        res.status(400).json({message: 'Error updating bot', error: e});
     });
 });
 
-router.patch('/patch', auth.required, (req, res) => {
-    console.log(req.body);
-    Bot.findOneAndUpdate({_id: req.body._id}, req.body, {new: true}).then((bot, err) => {
-        if (err)
-            return res.status(400).json({message: "Couldn't Patch Bot", error: err});
-        return res.status(200).json(bot);
-    });
-});
-
-router.post('/register', auth.required, async (req, res) => {
+router.post('/register', passport.authenticate('jwt', {session: false}), async (req, res) => {
     Bot.findByIdAndUpdate(req.body.id, {
         $addToSet: {
             tournaments: {

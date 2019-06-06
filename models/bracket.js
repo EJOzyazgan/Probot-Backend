@@ -1,20 +1,24 @@
-const mongoose = require('mongoose');
+'use strict';
 
-let BracketSchema = new mongoose.Schema({
-    divisions: {
-        type: [],
-        default: null
-    },
-    tournamentId: {
-        type: String,
-        required: true
-    },
-    name: {
-        type: String,
-        required: true
-    }
-});
+module.exports = (sequalize, DataTypes) => {
+    const Bracket = sequalize.define('Bracket', {
+        divisions: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: null
+        },
+        tournamentId: {
+            type: DataTypes.STRING,
+            required: true
+        },
+        name: {
+            type: DataTypes.STRING,
+            required: true
+        }
+    });
 
-let Bracket = mongoose.model('Bracket', BracketSchema);
-
-module.exports = {Bracket};
+    return Bracket
+};
+    //
+    // let Bracket = mongoose.model('Bracket', BracketSchema);
+    //
+    // module.exports = {Bracket};

@@ -1,45 +1,57 @@
-const mongoose = require('mongoose');
-const Table = require('./table').schema;
+'use strict';
 
-let BotSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    serviceUrl: {
-        type: String,
-        required: true
-    },
-    tournaments: {
-        type: [String],
-        default: []
-    },
-    userId: {
-        type: String,
-        required: true
-    },
-    handsPlayed: {
-        type: Number,
-        default: 0
-    },
-    handsWon: {
-      type: Number,
-      default: 0
-    },
-    lastPlayed: {
-        type: Date,
-        default: null
-    },
-    currentTable: {
-      type: String,
-      default: null
-    },
-    tablesPlayed: {
-        type: [Table],
-        default: []
-    }
-});
+// const Table = require('./table').schema;
 
-let Bot = mongoose.model('Bot', BotSchema);
+module.exports = (sequalize, DataTypes) => {
+    const Bot = sequalize.define('Bot', {
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                notNull: {msg: 'Must provide name'}
+            }
+        },
+        serviceUrl: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                notNull: {msg: 'Must provide serviceUrl'},
+                isUrl: {msg: 'Must provide valid URL'}
+            }
+        },
+        tournaments: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: []
+        },
+        handsPlayed: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        handsWon: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        lastPlayed: {
+            type: DataTypes.DATE,
+            defaultValue: null
+        },
+        currentTable: {
+            type: DataTypes.STRING,
+            defaultValue: null
+        },
+        tablesPlayed: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: []
+        }
+    });
 
-module.exports = {Bot};
+    Bot.associate = models => {
+        Bot.belongsTo(models.User, {
+            as: 'user',
+            onDelete: 'CASCADE',
+            foreignKey: 'userId'
+        });
+    };
+
+    return Bot;
+};
