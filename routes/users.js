@@ -10,7 +10,7 @@ router.post('/create', async (req, res) => {
         .then((user) => res.status(200).json(user))
         .catch((error) => {
             console.log(error);
-            res.status(400).json({message: 'Error creating user', error: error});
+            res.status(400).json({msg: 'Error creating user', error: error});
         });
 });
 
@@ -22,7 +22,7 @@ router.post('/login', async (req, res, next) => {
     }).then((user) => {
         if (!user) {
             return res.status(400).send({
-                message: 'Authentication failed. User not found.',
+                msg: 'Authentication failed. User not found.',
             });
         }
         user.comparePassword(req.body.password, (err, isMatch) => {
@@ -49,21 +49,20 @@ router.post('/exists', async (req, res) => {
         if (!user) {
             return res.status(200).json({
                 exists: false,
-                message: 'Email not already used',
+                msg: 'Email not already used',
             });
         }
         return res.status(200).json({
             exists: true,
-            message: 'Email already used',
+            msg: 'Email already used',
         });
-    }).catch((error) => res.status(400).json({message: 'Error finding account', error: error}));
+    }).catch((error) => res.status(400).json({msg: 'Error finding account', error: error}));
 });
 
-router.get('/get/:id', passport.authenticate('jwt', {session: false}), async (req, res) => {
-    console.log(req.params);
+router.get('/get', passport.authenticate('jwt', {session: false}), async (req, res) => {
     User.findOne({
         where: {
-            id: req.params.id
+            id: req.user.dataValues.id
         },
         attributes: { exclude: ['password', 'isAdmin'] },
         include: [{
@@ -73,11 +72,11 @@ router.get('/get/:id', passport.authenticate('jwt', {session: false}), async (re
     }).then((user) => {
         return res.status(200).json(user);
     }).catch((e) => {
-        res.status(400).json({message: 'Error finding user', error: e});
+        res.status(400).json({msg: 'Error finding user', error: e});
     });
 });
 
-router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.patch('/patch', passport.authenticate('jwt', {session: false}), async (req, res) => {
     User.update({
         email: req.body.email,
         password: req.body.password,
@@ -92,13 +91,13 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), async
         isAdmin: req.body.isAdmin
     }, {
         where: {
-            id: req.params.id
+            id: req.user.dataValues.id
         },
         returning: true
     }).then(([ rowsUpdate, [updatedUser] ]) => {
         return res.status(200).json(updatedUser);
     }).catch((e) => {
-        res.status(400).json({message: 'Error updating user', error: e});
+        res.status(400).json({msg: 'Error updating user', error: e});
     });
 });
 

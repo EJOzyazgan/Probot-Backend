@@ -12,7 +12,7 @@ router.get('get/:id', passport.authenticate('jwt', {session: false}), (req, res,
     }).then((bot) => {
         return res.status(200).json(bot);
     }).catch((e) => {
-        res.status(400).json({message: 'Error finding bot', error: e});
+        res.status(400).json({msg: 'Error finding bot', error: e});
     });
 });
 
@@ -21,7 +21,7 @@ router.post('/create', async (req, res) => {
         .then((bot) => res.status(200).json(bot))
         .catch((error) => {
             console.log(error);
-            res.status(400).json({message: 'Error creating bot', error: error});
+            res.status(400).json({msg: 'Error creating bot', error: error});
         });
 });
 
@@ -43,7 +43,7 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req,
     }).then(([ rowsUpdate, [updatedBot] ]) => {
         return res.status(200).json(updatedBot);
     }).catch((e) => {
-        res.status(400).json({message: 'Error updating bot', error: e});
+        res.status(400).json({msg: 'Error updating bot', error: e});
     });
 });
 
