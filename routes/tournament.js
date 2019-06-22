@@ -2,13 +2,14 @@ const engine = require('../engine/index');
 const {Bot} = require('../models/bot');
 const {Bracket} = require('../models/bracket');
 const {Tournament} = require('../models/tournament');
-const {Game} = require('../models/game');
-const {Update} = require('../models/update');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const app = require('../app');
 const ts = require('../config/tournamet-state');
+const models = require('../models');
+const Update = models.Update;
+const Game = models.Game;
 
 //PLAYERS
 const testPlayer = require('../demo-players/test-player');
@@ -154,33 +155,31 @@ function getBots(matchBots) {
 
 function saveUpdates(data, done) {
     [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
-    let entry = new Update(data);
-    entry.save((err, savedData) => {
-        if (err) {
+    // let entry = new Update(data);
+    // console.log(data);
+    Update.create(data)
+        .then((update) => {
+            app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', {data: update});
+            done();
+        })
+        .catch((error) => {
             console.log(`An error occurred while saving ${data.type} updates.`);
-            console.log(err.message);
-        }
-        app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', {data: savedData});
-        done();
-    });
+            console.log(error);
+            done();
+        });
 }
 
 function saveGame(data, done) {
-    let entry = new Game(data);
-    entry.save((err, savedGame) => {
-        if (err) {
+    Game.create(data)
+        .then((game) => {
+            app.io.sockets.in(data.tournamentId).emit('gameOver', {data: game});
+            done();
+        })
+        .catch((error) => {
             console.log(`An error occurred while saving ${data.type} updates.`);
-            console.log(err.message);
-        }
-
-        app.io.sockets.in(data.tournamentId).emit('gameOver', {data: savedGame});
-
-        if (savedGame.gameId === 5) {
-            quitTournament(savedGame.tournamentId);
-        }
-
-        done();
-    });
+            console.log(error);
+            done();
+        });
 }
 
 function quitTournament(id) {

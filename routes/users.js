@@ -3,7 +3,6 @@ const router = express.Router();
 const models = require('../models');
 const User = models.User;
 const passport = require('passport');
-const jwt = require('jsonwebtoken');
 
 router.post('/create', async (req, res) => {
     User.create(req.body)
@@ -99,10 +98,6 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
     }).catch((e) => {
         res.status(400).json({msg: 'Error updating user', error: e});
     });
-});
-
-router.delete('/delete', async (req, res) => {
-
 });
 
 module.exports = router;

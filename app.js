@@ -48,21 +48,21 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
-app.use('/tournament', tournamentRouter);
-app.use('/user', usersRouter);
-app.use('/bot', botRouter);
-app.use('/table', tableRouter);
+app.use('/api/tournament', tournamentRouter);
+app.use('/api/user', usersRouter);
+app.use('/api/bot', botRouter);
+app.use('/api/table', tableRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
-models.sequelize.sync({alter: true}).then(() => {
-  app.listen(port, () => {
+//models.sequelize.sync({alter: true}).then(() => {
+  http.listen(port, () => {
     console.log(`Listening on port ${port}!`)
   });
-});
+//});
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -74,8 +74,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
-// http.listen(port, () => console.log(`Listening on port ${port}`));
 
 exports.server = http;
 exports.io = io;

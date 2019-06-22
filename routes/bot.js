@@ -61,26 +61,26 @@ router.post('/register', passport.authenticate('jwt', {session: false}), async (
     });
 });
 
-router.post('/register/all', async (req, res) => {
-    await Bot.find({}, (err, bots) => {
-        bots.forEach(bot => {
-            Bot.findByIdAndUpdate(bot.id, {$addToSet: {tournaments: req.body.tournamentId}}, {new: true}, (err, bot) => {
-
-            });
-        });
-    });
-});
-
-router.get('/clear/tournaments', async (req, res) => {
-    await Bot.find({}, (err, bots) => {
-        bots.forEach(bot => {
-            bot.tournaments = [];
-            Bot.findByIdAndUpdate(bot.id, bot, {new: true}, () => {
-            });
-        });
-        if (err) return res.status(400).send("Bots Tournaments Cleared Error");
-        res.status(200).send("Bots Tournaments Cleared");
-    });
-});
+// router.post('/register/all', async (req, res) => {
+//     await Bot.find({}, (err, bots) => {
+//         bots.forEach(bot => {
+//             Bot.findByIdAndUpdate(bot.id, {$addToSet: {tournaments: req.body.tournamentId}}, {new: true}, (err, bot) => {
+//
+//             });
+//         });
+//     });
+// });
+//
+// router.get('/clear/tournaments', async (req, res) => {
+//     await Bot.find({}, (err, bots) => {
+//         bots.forEach(bot => {
+//             bot.tournaments = [];
+//             Bot.findByIdAndUpdate(bot.id, bot, {new: true}, () => {
+//             });
+//         });
+//         if (err) return res.status(400).send("Bots Tournaments Cleared Error");
+//         res.status(200).send("Bots Tournaments Cleared");
+//     });
+// });
 
 module.exports = router;

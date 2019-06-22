@@ -10,6 +10,4 @@ module.exports = (sequalize, DataTypes) => {
 
     return Table
 };
-    // let Table = mongoose.model('Table', TableSchema);
-    //
-    // module.exports = {Table};
+

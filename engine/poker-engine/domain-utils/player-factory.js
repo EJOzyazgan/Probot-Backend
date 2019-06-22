@@ -14,7 +14,8 @@ const playerStatus = require('../domain/player-status');
 
 const splitPot = require('./split-pot');
 
-const {Update} = require('../../../models/update');
+const models = require('../../../models');
+const Update = models.Update;
 
 
 const update_ = Symbol('internal-update-method');
@@ -281,10 +282,12 @@ const actions = {
         // index of the player 'this' in the players array
         state.me = gs.players.findIndex(player => player.id === this.id);
 
-        let history = [];
-
-        await Update.find({tournamentId: state.tournamentId}).then(updates => {
-            history = updates;
+        let history = await Update.findAll({
+            where: {
+                tournamentId: state.tournamentId,
+                handId: state.hand,
+                gameId: state.game
+            }
         });
 
         history = cleanHistory(gs.players[state.me].id, history);
