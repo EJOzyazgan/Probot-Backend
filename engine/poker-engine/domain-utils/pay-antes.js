@@ -1,8 +1,6 @@
 
 'use strict';
 
-const config = require('../../config');
-
 const playerStatus = require('../domain/player-status');
 
 
@@ -19,17 +17,17 @@ const playerStatus = require('../domain/player-status');
  */
 exports = module.exports = function payAntes(gs){
 
-  if (!config.ENABLE_ANTE){
+  if (!gs.config.ENABLE_ANTE){
     return;
   }
 
 
   // ante's amount is 10% of the big blind
-  const anteAmount = (2 * gs.sb) * .1
+  const anteAmount = (2 * gs.sb) * .1;
 
   // ante should start to be payed when their amount
   // is greater than 10% of the initial buyin
-  if (anteAmount < config.BUYIN * .1){
+  if (anteAmount < gs.config.BUYIN * .1){
     return;
   }
 

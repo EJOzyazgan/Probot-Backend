@@ -1,7 +1,5 @@
 'use strict';
 
-const config = require('../config');
-
 const logger = require('../storage/logger');
 const save = require('../storage/storage').save;
 
@@ -68,8 +66,8 @@ exports = module.exports = function* betLoop(gs) {
 
                     player.talk(gs).then(player.payBet.bind(player, gs));
 
-                    if (config.BETWAIT) {
-                        await sleep(config.BETWAIT);
+                    if (gs.config.BETWAIT) {
+                        await sleep(gs.config.BETWAIT);
                     }
                 }));
 

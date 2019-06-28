@@ -1,10 +1,6 @@
 
 'use strict';
 
-const config = require('../../config');
-
-
-
 /**
  * @function
  * @name setSBAmount
@@ -27,8 +23,8 @@ exports = module.exports = function setSBAmount(gs){
   // should have been completed by the dealer button,
   // before the small blind level can be increased
 
-  const blinds = config.SMALL_BLINDS;
-  const period = config.BLINDS_PERIOD || 1;
+  const blinds = gs.config.SMALL_BLINDS;
+  const period = gs.config.BLINDS_PERIOD || 1;
 
   const blindIndex = Math.floor(gs.dealerButtonRound / period);
 

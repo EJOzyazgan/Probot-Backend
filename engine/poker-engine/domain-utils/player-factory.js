@@ -1,7 +1,4 @@
 'use strict';
-
-const config = require('../../config');
-
 const logger = require('../../storage/logger');
 const save = require('../../storage/storage').save;
 
@@ -230,7 +227,7 @@ const actions = {
         state.tournamentId = gs.tournamentId;
 
         // initial amount of chips available to each player
-        state.buyin = config.BUYIN;
+        state.buyin = gs.config.BUYIN;
 
         // game number of the current tournament
         state.game = gs.gameProgressiveId;
@@ -413,8 +410,7 @@ function getBestCombinationCardsLogMessage(cards) {
  *
  * @returns {object|null} the player object created
  */
-exports = module.exports = function factory(obj) {
-
+exports = module.exports = function factory(obj, gs) {
     if (!isValidPlayer(obj)) {
         logger.warn('Registered an attempt to sign an invalid player', obj);
         return null;
@@ -435,7 +431,7 @@ exports = module.exports = function factory(obj) {
     player.willJoin = true;
 
     // amount of chips available
-    player.chips = config.BUYIN;
+    player.chips = gs.config.BUYIN;
 
     // two private cards of the player
     player.cards = [];

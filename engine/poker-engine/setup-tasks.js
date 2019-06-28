@@ -1,8 +1,6 @@
 
 'use strict';
 
-const config = require('../config');
-
 const logger = require('../storage/logger');
 
 const playerStatus = require('./domain/player-status');

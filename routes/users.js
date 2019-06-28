@@ -3,6 +3,7 @@ const router = express.Router();
 const models = require('../models');
 const User = models.User;
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
 
 router.post('/create', async (req, res) => {
     User.create(req.body)

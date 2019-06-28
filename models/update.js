@@ -31,10 +31,10 @@
 
 module.exports = (sequalize, DataTypes) => {
     const Update = sequalize.define('Update', {
-        tournamentId: {type: DataTypes.STRING, required: true},
-        gameId: {type: DataTypes.INTEGER, required: true},
-        handId: {type: DataTypes.INTEGER, required: true},
-        type: {type: DataTypes.STRING, required: true, enum: ['setup', 'bet', 'cards', 'status', 'showdown', 'win']},
+        tournamentId: {type: DataTypes.STRING, allowNull: false},
+        gameId: {type: DataTypes.INTEGER, allowNull: false},
+        handId: {type: DataTypes.INTEGER, allowNull: false},
+        type: {type: DataTypes.STRING, allowNull: false, enum: ['setup', 'bet', 'cards', 'status', 'showdown', 'win']},
         pot: DataTypes.INTEGER,
         sb: DataTypes.INTEGER,
         players: DataTypes.ARRAY(DataTypes.JSON),

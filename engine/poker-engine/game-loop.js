@@ -1,8 +1,6 @@
 
 'use strict';
 
-const config = require('../config');
-
 const logger = require('../storage/logger');
 const save = require('../storage/storage').save;
 
@@ -18,6 +16,7 @@ const play = require('./bet-loop');
 
 
 exports = module.exports = function* dealer(gs){
+  let config = gs.config;
 
   function sleep(time) {
     return new Promise(res => setTimeout(res, time));
