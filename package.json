@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "start:dev": "nodemon app.js"
   },
   "dependencies": {
     "@types/socket.io": "^2.1.2",
@@ -42,5 +43,8 @@
     "sleep-promise": "^8.0.1",
     "socket.io": "^2.2.0",
     "validator": "^10.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
   }
 }

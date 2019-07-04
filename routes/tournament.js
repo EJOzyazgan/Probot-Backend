@@ -1,14 +1,15 @@
-const engine = require('../engine/index');
+const engine = require('../controllers/engine');
 const {Bot} = require('../models/bot');
 const {Bracket} = require('../models/bracket');
 const {Tournament} = require('../models/tournament');
-const {Game} = require('../models/game');
-const {Update} = require('../models/update');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const app = require('../app');
 const ts = require('../config/tournamet-state');
+const models = require('../models');
+const Update = models.Update;
+const Game = models.Game;
 
 //PLAYERS
 const testPlayer = require('../demo-players/test-player');
@@ -31,7 +32,7 @@ router.get('/all', async (req, res) => {
 
 router.post('/start/game', async (req, res) => {
     const gameId = '' + req.body.division.name + req.body.round.name + req.body.match.name;
-    const tournamentId = '' + req.body.tournament._id + '-' + gameId;
+    const tournamentId = '' + req.body.tournament.id + '-' + gameId;
     console.log(tournamentId);
     // console.log(getBots(req.body.match.bots));
     engine.start(tournamentId, req.body.match.bots);
@@ -125,20 +126,20 @@ router.post('/bet', async (req, res) => {
     res.status(200).send(testPlayer.bet(req.body).toString());
 });
 
-engine.on('tournament:aborted', () => {
-    console.log('Tournament aborted.');
-});
-
-engine.on('tournament:completed', () => {
-    console.log('Tournament completed.');
-});
-
-engine.on('gamestate:updated', (data, done) => {
-    if (data.type !== 'points')
-        return void saveUpdates(data, done);
-
-    saveGame(data, done);
-});
+// engine.on('tournament:aborted', () => {
+//     console.log('Tournament aborted.');
+// });
+//
+// engine.on('tournament:completed', () => {
+//     console.log('Tournament completed.');
+// });
+//
+// engine.on('gamestate:updated', (data, done) => {
+//     if (data.type !== 'points')
+//         return void saveUpdates(data, done);
+//
+//     saveGame(data, done);
+// });
 
 function getBots(matchBots) {
     let bots = [];
@@ -152,36 +153,34 @@ function getBots(matchBots) {
     return bots;
 }
 
-function saveUpdates(data, done) {
-    [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
-    let entry = new Update(data);
-    entry.save((err, savedData) => {
-        if (err) {
-            console.log(`An error occurred while saving ${data.type} updates.`);
-            console.log(err.message);
-        }
-        app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', {data: savedData});
-        done();
-    });
-}
-
-function saveGame(data, done) {
-    let entry = new Game(data);
-    entry.save((err, savedGame) => {
-        if (err) {
-            console.log(`An error occurred while saving ${data.type} updates.`);
-            console.log(err.message);
-        }
-
-        app.io.sockets.in(data.tournamentId).emit('gameOver', {data: savedGame});
-
-        if (savedGame.gameId === 5) {
-            quitTournament(savedGame.tournamentId);
-        }
-
-        done();
-    });
-}
+// function saveUpdates(data, done) {
+//     [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
+//     // let entry = new Update(data);
+//     // console.log(data);
+//     Update.create(data)
+//         .then((update) => {
+//             app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', {data: update});
+//             done();
+//         })
+//         .catch((error) => {
+//             console.log(`An error occurred while saving ${data.type} updates.`);
+//             console.log(error);
+//             done();
+//         });
+// }
+//
+// function saveGame(data, done) {
+//     Game.create(data)
+//         .then((game) => {
+//             app.io.sockets.in(data.tournamentId).emit('gameOver', {data: game});
+//             done();
+//         })
+//         .catch((error) => {
+//             console.log(`An error occurred while saving ${data.type} updates.`);
+//             console.log(error);
+//             done();
+//         });
+// }
 
 function quitTournament(id) {
     engine.quit(id);

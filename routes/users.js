@@ -101,8 +101,4 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
     });
 });
 
-router.delete('/delete', async (req, res) => {
-
-});
-
 module.exports = router;

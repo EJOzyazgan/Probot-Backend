@@ -1,7 +1,4 @@
 'use strict';
-
-const config = require('../../config');
-
 const logger = require('../../storage/logger');
 const save = require('../../storage/storage').save;
 
@@ -14,7 +11,8 @@ const playerStatus = require('../domain/player-status');
 
 const splitPot = require('./split-pot');
 
-const {Update} = require('../../../models/update');
+const models = require('../../../models');
+const Update = models.Update;
 
 
 const update_ = Symbol('internal-update-method');
@@ -229,7 +227,7 @@ const actions = {
         state.tournamentId = gs.tournamentId;
 
         // initial amount of chips available to each player
-        state.buyin = config.BUYIN;
+        state.buyin = gs.config.BUYIN;
 
         // game number of the current tournament
         state.game = gs.gameProgressiveId;
@@ -281,10 +279,12 @@ const actions = {
         // index of the player 'this' in the players array
         state.me = gs.players.findIndex(player => player.id === this.id);
 
-        let history = [];
-
-        await Update.find({tournamentId: state.tournamentId}).then(updates => {
-            history = updates;
+        let history = await Update.findAll({
+            where: {
+                tournamentId: state.tournamentId,
+                handId: state.hand,
+                gameId: state.game
+            }
         });
 
         history = cleanHistory(gs.players[state.me].id, history);
@@ -410,8 +410,7 @@ function getBestCombinationCardsLogMessage(cards) {
  *
  * @returns {object|null} the player object created
  */
-exports = module.exports = function factory(obj) {
-
+exports = module.exports = function factory(obj, gs) {
     if (!isValidPlayer(obj)) {
         logger.warn('Registered an attempt to sign an invalid player', obj);
         return null;
@@ -419,7 +418,7 @@ exports = module.exports = function factory(obj) {
 
     const player = Object.create(actions);
 
-    player.id = obj.id;
+    player.id = '' + obj.id;
 
     ['id', 'name', 'serviceUrl']
         .forEach(prop => Object.defineProperty(player, prop, {value: obj[prop]}));
@@ -432,7 +431,7 @@ exports = module.exports = function factory(obj) {
     player.willJoin = true;
 
     // amount of chips available
-    player.chips = config.BUYIN;
+    player.chips = gs.config.BUYIN;
 
     // two private cards of the player
     player.cards = [];

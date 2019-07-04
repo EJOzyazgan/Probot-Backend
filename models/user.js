@@ -33,7 +33,7 @@ module.exports = (sequalize, DataTypes) => {
             defaultValue: 1
         },
         chips: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.FLOAT,
             defaultValue: 1000
         },
         rankClass: {
@@ -45,7 +45,7 @@ module.exports = (sequalize, DataTypes) => {
             defaultValue: 0
         },
         totalWinnings: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.FLOAT,
             defaultValue: 0
         },
         friends: {
