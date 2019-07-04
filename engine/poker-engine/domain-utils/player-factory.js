@@ -418,7 +418,7 @@ exports = module.exports = function factory(obj, gs) {
 
     const player = Object.create(actions);
 
-    player.id = obj.id;
+    player.id = '' + obj.id;
 
     ['id', 'name', 'serviceUrl']
         .forEach(prop => Object.defineProperty(player, prop, {value: obj[prop]}));
