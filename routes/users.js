@@ -64,7 +64,7 @@ router.get('/get', passport.authenticate('jwt', {session: false}), async (req, r
         where: {
             id: req.user.dataValues.id
         },
-        attributes: { exclude: ['password', 'isAdmin'] },
+        attributes: { exclude: ['password'] },
         include: [{
             as: 'bots',
             model:  models.Bot

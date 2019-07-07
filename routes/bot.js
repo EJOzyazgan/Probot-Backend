@@ -4,10 +4,10 @@ const passport = require('passport');
 const models = require('../models');
 const Bot = models.Bot;
 
-router.get('get/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
+router.get('/get/user', passport.authenticate('jwt', {session: false}), (req, res, next) => {
     Bot.findOne({
         where: {
-            userId: req.params.id
+            userId: req.user.dataValues.id
         }
     }).then((bot) => {
         return res.status(200).json(bot);

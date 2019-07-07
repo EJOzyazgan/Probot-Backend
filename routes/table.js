@@ -36,7 +36,7 @@ router.post('/start/sandbox', passport.authenticate('jwt', {session: false}), as
     where: {
       tableType: 'sandbox',
       active: false,
-      'config.MAX_GAMES': req.body.numGames
+      'config.MAX_GAMES': 1
     }
   }).then(async ([table, created]) => {
     Bot.findAll({
