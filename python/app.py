@@ -41,7 +41,7 @@ def get_bot():
         # f.write(',')
         # f.close()
         return str(bot_methods.mastermind(request.json))
-    elif player['id'] == 12:
+    elif player['id'] == 13:
         # with open("r2d2_data.txt", "a+") as outfile:
         #     json.dump(request.json, outfile)
         #

@@ -21,7 +21,7 @@ router.post('/start/new/:id', passport.authenticate('jwt', {session: false}), as
       id: req.params.id
     }
   }).then(table => {
-    if(!table) {
+    if (!table) {
       return res.status(400).json({msg: 'Table does not exist'});
     }
     engine.start(table, req.body.bots);
@@ -55,19 +55,89 @@ router.post('/start/sandbox', passport.authenticate('jwt', {session: false}), as
   });
 });
 
-router.post('/join', passport.authenticate('jwt', {session: false}), async (req, res) => {
-  engine.join(req.body.id, req.body.bots);
-  return res.status(200).json({message: 'Joined Match'})
+router.patch('/update', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  let json = await updateTable(req.body);
+  // let json = await Table.update(req.body, {
+  //   where: {
+  //     id: req.body.id
+  //   },
+  //   returning: true
+  // }).then(([rowsUpdate, [updatedTable]]) => {
+  //   return {success: true, obj: updatedTable};
+  // }).catch((e) => {
+  //   return {success: false, obj: e};
+  // });
+
+  return res.status(200).json(json);
 });
 
-createSandBox = async () => {
-  Table.create({
-    type: 'sandbox'
-  }).then(table => {
-    return {success: true, obj: table}
+router.post('/join', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  Table.findAll({
+    limit: 5,
+    where: {
+      'config.BUYIN': req.body.buyin
+    },
+    order: [
+      ['numPlayers', 'ASC']
+    ]
+  }).then(async tables => {
+    let joined = false;
+    let update = null;
+
+    for (let i = 1; i < 6; i++) {
+      for (let table of tables) {
+        if (table.numPlayers === i) {
+          joined = true;
+          table.numPlayers++;
+          table.active = true;
+          update = await updateTable(table.dataValues);
+          if (update.success) {
+            engine.join(table.id, [req.body.bot]);
+            return res.status(200).json({msg: 'Joined Table'});
+          } else
+            return res.status(400).json({msg: 'Could not join table', error: update.obj});
+        }
+      }
+
+      if (tables.length === 0) {
+        return await openNewTable(req.body.buyin, res, req.body.bot);
+      } else if (i === 5 && tables[0].numPlayers === 0) {
+        tables[0].numPlayers++;
+        update = await updateTable(tables[0].dataValues);
+        if (update.success) {
+          engine.join(tables[0].id, [req.body.bot]);
+          return res.status(200).json({msg: 'Waiting for other players'});
+        } else
+          return res.status(400).json({msg: 'Could not join table', error: update.obj});
+      } else if (i === 5) {
+        return await openNewTable(req.body.buyin, res, req.body.bot);
+      }
+    }
   }).catch(err => {
+    return res.status(400).json({msg: 'Could not join table', error: err});
+  });
+});
+
+updateTable = (table) => {
+  return Table.update(table, {
+    where: {
+      id: table.id
+    },
+    returning: true
+  }).then(([rowsUpdate, [updatedTable]]) => {
+    return {success: true, obj: updatedTable};
+  }).catch((err) => {
     return {success: false, obj: err};
   });
+};
+
+openNewTable = (buyin, res, bot) => {
+  return Table.create({tableType: 'pvp', numPlayers: 1, 'config.BUYIN': buyin}).then(table => {
+    engine.start(table, [bot]);
+    return res.status(200).json({msg: 'Waiting for other players'});
+  }).catch(err => {
+    return res.status(400).json({msg: 'Could not join table', error: err})
+  })
 };
 
 module.exports = router;

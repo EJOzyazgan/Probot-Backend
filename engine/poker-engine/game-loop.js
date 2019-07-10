@@ -34,6 +34,13 @@ exports = module.exports = function* dealer(gs){
 
   while (gs.tournamentStatus !== gameStatus.stop){
 
+    //
+    // break here until the tournament is resumed
+    if (gs.tournamentStatus === gameStatus.pause){
+      logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
+      yield waitResume();
+    }
+
     const activePlayers = gs.activePlayers;
     const foldedPlayers = gs.players.filter(player => player.status === playerStatus.folded);
 
@@ -50,6 +57,7 @@ exports = module.exports = function* dealer(gs){
 
       const playerCount = gs.gameChart.unshift(activePlayers[0].name);
       const points = config.AWARDS[playerCount-2];
+      console.log(config.AWARDS, playerCount);
 
       const finalGameChart = gs.gameChart.map((playerName, i) => ({ name: playerName, pts: points[i] }));
 
@@ -83,22 +91,10 @@ exports = module.exports = function* dealer(gs){
     }
 
 
-
-
-
-
     gs.handUniqueId = `${gs.pid}_${gs.tournamentId}_${gs.gameProgressiveId}-${gs.handProgressiveId}`;
 
     logger.info('Starting hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
 
-
-
-    //
-    // break here until the tournament is resumed
-    if (gs.tournamentStatus === gameStatus.pause){
-      logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
-      yield waitResume();
-    }
 
 
     if (gs.tournamentStatus === gameStatus.play || gs.tournamentStatus === gameStatus.latest){

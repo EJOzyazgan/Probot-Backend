@@ -3,6 +3,7 @@ const app = require('../app');
 const models = require('../models');
 const Update = models.Update;
 const Game = models.Game;
+const Table = models.Table;
 
 module.exports = {
     start: (table, bots) => {
@@ -24,6 +25,10 @@ engine.on('tournament:aborted', () => {
 
 engine.on('tournament:completed', () => {
     console.log('Tournament completed.');
+});
+
+engine.on('gamestate:update-table', (data) => {
+    updateTable(data);
 });
 
 engine.on('gamestate:updated', (data, done) => {
@@ -59,4 +64,18 @@ let saveGame = (data, done) => {
             console.log(error);
             done();
         });
+};
+
+let updateTable = (table, done) => {
+  return Table.update({
+      numPlayers: table.numPlayers
+  }, {
+    where: {
+      id: table.id
+    }
+  }).then(() => {
+
+  }).catch((err) => {
+      console.log(err);
+  });
 };
