@@ -27,6 +27,9 @@ exports = module.exports = async function resetGamestate(gs) {
   const hasBB_ = Symbol.for('has-big-blind');
 
   gs.players = gs.players.filter((player) => {
+    if(player.willLeave) {
+      engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, totalWinnings: player.chips}));
+    }
     return !player.willLeave
   });
 

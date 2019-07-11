@@ -19,12 +19,12 @@ exports = module.exports = function assignPot(gs) {
 
 
   function assignChips(playerId, amount = gs.pot){
-    const player = gs.players.find(player => player.id == playerId);
+    const player = gs.players.find(player => player.id === playerId);
 
     player.chips += amount;
     gs.pot -= amount;
 
-    const winner = gs.winners.find(player => player.id == playerId);
+    const winner = gs.winners.find(player => player.id === playerId);
 
     if (winner){
       return void (winner.amount += amount);
@@ -49,13 +49,13 @@ exports = module.exports = function assignPot(gs) {
   //  when there is only an active player,
   //  he takes the full pot
 
-  if (activePlayers.length == 1){
+  if (activePlayers.length === 1){
     return void assignChips(activePlayers[0].id);
   }
 
 
 
-  if (gs.sidepots.length == 0){
+  if (gs.sidepots.length === 0){
     gs.sidepots.push({ quote: gs.callAmount, amount: gs.pot });
   }
 
@@ -68,11 +68,11 @@ exports = module.exports = function assignPot(gs) {
     const firstContender = sidepotContenders[0];
     const exequoTag = firstContender.bestCombinationData.exequo;
 
-    if (sidepotContenders.length == 1 || !exequoTag){
+    if (sidepotContenders.length === 1 || !exequoTag){
       return void assignChips(firstContender.id, sidepot.amount);
     }
 
-    const exequoContenders = sidepotContenders.filter(x => x.bestCombinationData.exequo == exequoTag);
+    const exequoContenders = sidepotContenders.filter(x => x.bestCombinationData.exequo === exequoTag);
     const sidepotSplittedAmount = sidepot.amount / exequoContenders.length;
 
     exequoContenders.forEach(contender => assignChips(contender.id, Math.floor(sidepotSplittedAmount)));
@@ -89,7 +89,7 @@ exports = module.exports = function assignPot(gs) {
     if (excidingChips > 0){
       let assigned = false;
       loopFrom(gs.players, gs.dealerButtonIndex, function(player) {
-        if (!assigned && exequoContenders.find(contender => contender.id == player.id)){
+        if (!assigned && exequoContenders.find(contender => contender.id === player.id)){
           assignChips(player.id, excidingChips);
           assigned = true;
         }

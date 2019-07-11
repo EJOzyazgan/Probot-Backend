@@ -13,6 +13,7 @@ const runTeardownTasks = require('./teardown-tasks');
 
 const play = require('./bet-loop');
 
+const engine = require('../index');
 
 
 exports = module.exports = function* dealer(gs){
@@ -44,6 +45,9 @@ exports = module.exports = function* dealer(gs){
     const activePlayers = gs.activePlayers;
     const foldedPlayers = gs.players.filter(player => player.status === playerStatus.folded);
 
+    gs.players.forEach(player => {
+      engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
+    });
 
     // when before a new hand starts,
     // there is only one active player
@@ -57,7 +61,6 @@ exports = module.exports = function* dealer(gs){
 
       const playerCount = gs.gameChart.unshift(activePlayers[0].name);
       const points = config.AWARDS[playerCount-2];
-      console.log(config.AWARDS, playerCount);
 
       const finalGameChart = gs.gameChart.map((playerName, i) => ({ name: playerName, pts: points[i] }));
 
@@ -75,8 +78,6 @@ exports = module.exports = function* dealer(gs){
         gs.tournamentStatus = gameStatus.stop;
         continue;
       }
-
-
 
       // warm up
       if (config.WARMUP){

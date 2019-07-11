@@ -16,6 +16,7 @@ const Update = models.Update;
 
 
 const update_ = Symbol('internal-update-method');
+const engine = require('../../index');
 
 const actions = {
 
@@ -28,7 +29,8 @@ const actions = {
    *
    * @param {Object} gs:
    *  the gamestate object
-   * @param {Number}
+   *
+   * @param {Number} betAmount
    *  the amount of chips the player has bet
    *
    * @returns {void}
@@ -409,6 +411,9 @@ function getBestCombinationCardsLogMessage(cards) {
  *  - player.name
  *  - player.serviceUrl
  *
+ *  @param {Object} gs
+ *  - game state
+ *
  * @returns {object|null} the player object created
  */
 exports = module.exports = function factory(obj, gs) {
@@ -420,6 +425,8 @@ exports = module.exports = function factory(obj, gs) {
   const player = Object.create(actions);
 
   player.id = '' + obj.id;
+
+  player.userId = obj.userId;
 
   ['id', 'name', 'serviceUrl']
     .forEach(prop => Object.defineProperty(player, prop, {value: obj[prop]}));
@@ -443,6 +450,7 @@ exports = module.exports = function factory(obj, gs) {
   // in each "betting session" of the current hand.
   player.chipsBet = 0;
 
+  engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, buyin: gs.config.BUYIN}));
 
   logger.info('%s (%s), registered as player.', player.name, player.id);
 
