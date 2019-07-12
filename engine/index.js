@@ -1,7 +1,5 @@
 'use strict';
 
-const config = require('./config');
-
 const events = require('events');
 const EventEmitter = events.EventEmitter;
 
@@ -34,7 +32,6 @@ const gamestate = Object.create(EventEmitter.prototype, {
   [setup_]: {
     writable: process.env.NODE_ENV === 'test',
     value: function (tournament, players, gameId) {
-      console.log("GS ID ", tournament.id, typeof tournament.id);
       const gs = {};
       gs.pid = process.pid;
       gs.tournamentId = `${tournament.id}`;
@@ -46,9 +43,6 @@ const gamestate = Object.create(EventEmitter.prototype, {
 
 
       logger.info('Setup tournament %s.', tournament.id, {tag: gs.handUniqueId});
-
-
-      gs.tournamentStatus = tournamentStatus.play;
 
       gs.players = players.map((p) => {return createPlayer(p, gs)}).filter(x => x != null);
 
@@ -67,13 +61,13 @@ const gamestate = Object.create(EventEmitter.prototype, {
 
 
       if (gs.players.length < 2) {
-        logger.info('Tournament %s cannot start cause not enough players.', tournament.id, {tag: gs.handUniqueId});
-        return this.emit('tournament:aborted', {tournamentId: tournament.id});
+        logger.info('Tournament %s waiting for more players players.', tournament.id, {tag: gs.handUniqueId});
+        gs.tournamentStatus = tournamentStatus.pause;
+      } else {
+        gs.tournamentStatus = tournamentStatus.play;
       }
 
       this[tournaments_].set(tournament.id, gs);
-
-      // return console.log(gs.players);
 
       logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), {tag: gs.handUniqueId});
 
@@ -120,14 +114,14 @@ const gamestate = Object.create(EventEmitter.prototype, {
       // that the tournament is starting for the first time, or
       // it is resuming after a break.
 
-      const gs = this[tournaments_].get(tournament.dataValues.id);
+      const gs = this[tournaments_].get(tournament.id);
 
       // a)
       // in case the tournament is starting for the first time
       // we've to setup the tournament.
 
       if (gs == null)
-        return void this[setup_](tournament.dataValues, players, gameId);
+        return void this[setup_](tournament, players, gameId);
 
       // b)
       // in case the tournament has already started, and it'snt
@@ -144,7 +138,14 @@ const gamestate = Object.create(EventEmitter.prototype, {
     value: function (tournamentId, players) {
       const gs = this[tournaments_].get(tournamentId);
 
-      gs.players = gs.players.concat(players.map(createPlayer).filter(x => x != null));
+      gs.players = gs.players.concat(players.map((p) => {return createPlayer(p, gs)}).filter(x => x != null));
+
+      if (gs.players.length < 2) {
+        logger.info('Tournament %s waiting for more players players.', tournamentId, {tag: gs.handUniqueId});
+        gs.tournamentStatus = tournamentStatus.pause;
+      } else {
+        gs.tournamentStatus = tournamentStatus.play;
+      }
     }
   },
 

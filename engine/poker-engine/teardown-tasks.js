@@ -10,6 +10,7 @@ const showdown = require('./domain-utils/showdown');
 const assignPot = require('./domain-utils/assign-pot');
 const updatePlayersStatus = require('./domain-utils/update-players-status');
 
+const engine = require('../index');
 
 
 exports = module.exports = function* teardown(gs){
@@ -33,6 +34,10 @@ exports = module.exports = function* teardown(gs){
 
   assignPot(gs);
 
+  gs.winners.forEach(player => {
+    engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsWon: 1}));
+  });
+
   logger.log('debug', getWinsLogMessage(gs.winners), { tag: gs.handUniqueId });
 
   yield save({ type: 'win', handId: gs.handUniqueId, winners: gs.winners, players: gs.players });
@@ -42,6 +47,7 @@ exports = module.exports = function* teardown(gs){
   for (let i=0; i<activePlayers.length; i++){
     let player = activePlayers[i];
     if (player.chips === 0){
+      gs.players.splice(gs.players.findIndex(p => p.id === player.id));
       logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
       yield save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
     }
@@ -53,7 +59,7 @@ exports = module.exports = function* teardown(gs){
 
   gs.handChart = gs.winners = null;
 
-}
+};
 
 
 

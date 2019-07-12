@@ -25,14 +25,14 @@ exports = module.exports = function updatePlayerStatus(gs) {
   }
 
   const activePlayers = gs.activePlayers;
-  const outPlayers = activePlayers.filter(player => player.chips == 0);
+  const outPlayers = activePlayers.filter(player => player.chips === 0);
 
-  if (outPlayers.length == 0){
+  if (outPlayers.length === 0){
     return;
   }
 
 
-  if(outPlayers.length == 1){
+  if(outPlayers.length === 1){
     outPlayers[0].status = playerStatus.out;
     return void gs.gameChart.unshift(outPlayers[0].name);
   }
@@ -41,7 +41,7 @@ exports = module.exports = function updatePlayerStatus(gs) {
   // so that players with the weaker combination come first
   gs.handChart.slice(0).reverse()
     .forEach(function(player) {
-      const outPlayer = outPlayers.find(x => x.id == player.id);
+      const outPlayer = outPlayers.find(x => x.id === player.id);
       if (outPlayer){
         outPlayer.status = playerStatus.out;
         gs.gameChart.unshift(outPlayer.name);

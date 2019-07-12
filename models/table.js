@@ -4,11 +4,15 @@ module.exports = (sequalize, DataTypes) => {
   const Table = sequalize.define('Table', {
     tableType: {
       type: DataTypes.STRING,
-      allowNull: false
+      defaultValue: 'sandbox'
     },
     active: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    numPlayers: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },
     config: {
       type: DataTypes.JSON,

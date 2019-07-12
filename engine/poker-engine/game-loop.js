@@ -13,6 +13,7 @@ const runTeardownTasks = require('./teardown-tasks');
 
 const play = require('./bet-loop');
 
+const engine = require('../index');
 
 
 exports = module.exports = function* dealer(gs){
@@ -34,9 +35,19 @@ exports = module.exports = function* dealer(gs){
 
   while (gs.tournamentStatus !== gameStatus.stop){
 
+    //
+    // break here until the tournament is resumed
+    if (gs.tournamentStatus === gameStatus.pause){
+      logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
+      yield waitResume();
+    }
+
     const activePlayers = gs.activePlayers;
     const foldedPlayers = gs.players.filter(player => player.status === playerStatus.folded);
 
+    gs.players.forEach(player => {
+      engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
+    });
 
     // when before a new hand starts,
     // there is only one active player
@@ -68,8 +79,6 @@ exports = module.exports = function* dealer(gs){
         continue;
       }
 
-
-
       // warm up
       if (config.WARMUP){
         if (gs.gameProgressiveId <= config.WARMUP.GAME){
@@ -83,22 +92,10 @@ exports = module.exports = function* dealer(gs){
     }
 
 
-
-
-
-
     gs.handUniqueId = `${gs.pid}_${gs.tournamentId}_${gs.gameProgressiveId}-${gs.handProgressiveId}`;
 
     logger.info('Starting hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
 
-
-
-    //
-    // break here until the tournament is resumed
-    if (gs.tournamentStatus === gameStatus.pause){
-      logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
-      yield waitResume();
-    }
 
 
     if (gs.tournamentStatus === gameStatus.play || gs.tournamentStatus === gameStatus.latest){

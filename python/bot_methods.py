@@ -46,6 +46,9 @@ def good_game(game_state):
     p = gs['players']
     me = p[gs['me']]
 
+    if gs['game'] == 1 and gs['hand'] == 3:
+        return -1
+
     if me['cards'][0]['rank'] == me['cards'][1]['rank']:
         return gs['minimumRaiseAmount'] * 2
     elif me['chipsBet'] > 0:

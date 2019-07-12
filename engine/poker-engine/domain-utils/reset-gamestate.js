@@ -1,7 +1,9 @@
 'use strict';
 
 const playerStatus = require('../domain/player-status');
-
+const tournamentStatus = require('../../poker-engine/domain/tournament-status');
+const logger = require('../../storage/logger');
+const engine = require('../../index');
 
 /**
  * @function
@@ -13,43 +15,52 @@ const playerStatus = require('../domain/player-status');
  *
  * @returns void
  */
-exports = module.exports = function resetGamestate(gs) {
+exports = module.exports = async function resetGamestate(gs) {
 
-    gs.pot = gs.callAmount = 0;
+  gs.pot = gs.callAmount = 0;
 
-    gs.sidepots = [];
-    gs.commonCards = [];
+  gs.sidepots = [];
+  gs.commonCards = [];
 
 
-    const allin_ = Symbol.for('is-all-in');
-    const hasBB_ = Symbol.for('has-big-blind');
+  const allin_ = Symbol.for('is-all-in');
+  const hasBB_ = Symbol.for('has-big-blind');
 
-    gs.players = gs.players.filter((player) => {
-        return !player.willLeave
+  gs.players = gs.players.filter((player) => {
+    if(player.willLeave) {
+      engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, totalWinnings: player.chips}));
+    }
+    return !player.willLeave
+  });
+
+  engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
+
+  gs.players.forEach(function (player) {
+
+    [hasBB_, allin_].forEach(function (symb) {
+      delete player[symb];
     });
 
-    gs.players.forEach(function (player) {
+    // players who have folded in the previous hand
+    // should be re-activated
+    if (player.status === playerStatus.folded) {
+      player.status = playerStatus.active;
+    } else if (player.willJoin) {
+      player.willJoin = false;
+    }
 
-        [hasBB_, allin_].forEach(function (symb) {
-            delete player[symb];
-        });
+    player.chipsBet = 0;
 
-        // players who have folded in the previous hand
-        // should be re-activated
-        if (player.status === playerStatus.folded) {
-            player.status = playerStatus.active;
-        }
+    player.cards = [];
+    player.bestCombination = [];
+    player.bestCombinationData = null;
 
-        else if (player.willJoin) {
-            player.willJoin = false;
-        }
+  });
 
-        player.chipsBet = 0;
-
-        player.cards = [];
-        player.bestCombination = [];
-        player.bestCombinationData = null;
-
-    });
-
+  if (gs.players.length < 2) {
+    logger.info('Tournament %s waiting for more players players.', gs.tournamentId, {tag: gs.handUniqueId});
+    gs.tournamentStatus = tournamentStatus.pause;
+  } else {
+    gs.tournamentStatus = tournamentStatus.play;
+  }
 };
