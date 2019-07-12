@@ -47,6 +47,7 @@ exports = module.exports = function* dealer(gs){
 
     gs.players.forEach(player => {
       engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
+      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: 'handPlayed', value: 1, botId: player.id}));
     });
 
     // when before a new hand starts,

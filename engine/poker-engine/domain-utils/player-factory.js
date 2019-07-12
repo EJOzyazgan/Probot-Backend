@@ -446,9 +446,11 @@ exports = module.exports = function factory(obj, gs) {
   // in each "betting session" of the current hand.
   player.chipsBet = 0;
 
-  engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, buyin: player.chips}));
+  player.totalWinnings = obj.totalWinnings - player.chips;
 
-  console.log('emit');
+  engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: (player.chips * -1)}));
+  engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
+
 
   logger.info('%s (%s), registered as player.', player.name, player.id);
 

@@ -36,6 +36,7 @@ exports = module.exports = function* teardown(gs){
 
   gs.winners.forEach(player => {
     engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsWon: 1}));
+    engine.emit('gamestate:create-metric', Object.assign({}, {metricType: 'handWon', value: 1, botId: player.id}));
   });
 
   logger.log('debug', getWinsLogMessage(gs.winners), { tag: gs.handUniqueId });

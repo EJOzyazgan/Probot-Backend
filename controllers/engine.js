@@ -6,6 +6,7 @@ const Game = models.Game;
 const Table = models.Table;
 const User = models.User;
 const Bot = models.Bot;
+const Metric = models.Metric;
 
 module.exports = {
   start: (table, bots) => {
@@ -38,7 +39,11 @@ engine.on('gamestate:update-table', (data) => {
 });
 
 engine.on('gamestate:update-user', (data) => {
-  updateUser(data)
+  updateUser(data);
+});
+
+engine.on('gamestate:create-metric', (data) => {
+  createMetric(data);
 });
 
 engine.on('gamestate:updated', (data, done) => {
@@ -97,16 +102,9 @@ let updateUser = (data) => {
       id: data.id
     }
   }).then((user) => {
-    if (data.buyin) {
-      user.chips -= data.buyin;
-      user.totalWinnings -= data.buyin;
+    if (data.chips) {
+      user.chips += data.chips;
     }
-    if (data.totalWinnings) {
-      user.chips += data.totalWinnings;
-      user.totalWinnings += data.totalWinnings;
-    }
-
-    console.log(user.chips);
 
     User.update({
       chips: user.chips,
@@ -135,10 +133,13 @@ let updateBot = (data) => {
       bot.handsPlayed += data.handsPlayed;
     if (data.handsWon)
       bot.handsWon += data.handsWon;
+    if (data.totalWinnings)
+      bot.totalWinnings = data.totalWinnings;
 
     Bot.update({
       handsPlayed: bot.handsPlayed,
-      handsWon: bot.handsWon
+      handsWon: bot.handsWon,
+      totalWinnings: bot.totalWinnings
     }, {
       where: {
         id: bot.id
@@ -151,4 +152,13 @@ let updateBot = (data) => {
   }).catch((err) => {
     console.log(err);
   });
+};
+
+let createMetric = (data) => {
+  Metric.create(data)
+    .then((bot) => {
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };

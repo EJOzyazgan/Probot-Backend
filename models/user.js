@@ -44,10 +44,6 @@ module.exports = (sequalize, DataTypes) => {
             type: DataTypes.INTEGER,
             defaultValue: 0
         },
-        totalWinnings: {
-            type: DataTypes.FLOAT,
-            defaultValue: 0
-        },
         friends: {
             type: DataTypes.ARRAY(DataTypes.STRING),
             defaultValue: []

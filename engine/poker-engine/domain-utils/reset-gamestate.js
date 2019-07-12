@@ -28,7 +28,10 @@ exports = module.exports = async function resetGamestate(gs) {
 
   gs.players = gs.players.filter((player) => {
     if(player.willLeave) {
-      engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, totalWinnings: player.chips}));
+      player.totalWinnings += player.chips;
+      engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
+      engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: player.chips}));
+      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: 'totalWinnings', value: player.totalWinnings, botId: player.id}));
     }
     return !player.willLeave
   });
