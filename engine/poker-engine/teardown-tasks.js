@@ -10,6 +10,7 @@ const showdown = require('./domain-utils/showdown');
 const assignPot = require('./domain-utils/assign-pot');
 const updatePlayersStatus = require('./domain-utils/update-players-status');
 
+const engine = require('../index');
 
 
 exports = module.exports = function* teardown(gs){
@@ -58,7 +59,7 @@ exports = module.exports = function* teardown(gs){
 
   gs.handChart = gs.winners = null;
 
-}
+};
 
 
 

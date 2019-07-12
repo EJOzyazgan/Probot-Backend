@@ -114,14 +114,14 @@ const gamestate = Object.create(EventEmitter.prototype, {
       // that the tournament is starting for the first time, or
       // it is resuming after a break.
 
-      const gs = this[tournaments_].get(tournament.dataValues.id);
+      const gs = this[tournaments_].get(tournament.id);
 
       // a)
       // in case the tournament is starting for the first time
       // we've to setup the tournament.
 
       if (gs == null)
-        return void this[setup_](tournament.dataValues, players, gameId);
+        return void this[setup_](tournament, players, gameId);
 
       // b)
       // in case the tournament has already started, and it'snt

@@ -78,7 +78,8 @@ let saveGame = (data, done) => {
 
 let updateTable = (data) => {
   Table.update({
-    numPlayers: data.numPlayers
+    numPlayers: data.numPlayers,
+    active: data.numPlayers > 1
   }, {
     where: {
       id: data.id
@@ -91,15 +92,26 @@ let updateTable = (data) => {
 };
 
 let updateUser = (data) => {
-  return User.findById(data.id).then((user) => {
-    if (data.buyin)
+  User.findOne({
+    where: {
+      id: data.id
+    }
+  }).then((user) => {
+    if (data.buyin) {
       user.chips -= data.buyin;
+      user.totalWinnings -= data.buyin;
+    }
     if (data.totalWinnings) {
       user.chips += data.totalWinnings;
       user.totalWinnings += data.totalWinnings;
     }
 
-    User.update(user, {
+    console.log(user.chips);
+
+    User.update({
+      chips: user.chips,
+      totalWinnings: user.totalWinnings
+    }, {
       where: {
         id: user.id
       }
@@ -114,13 +126,20 @@ let updateUser = (data) => {
 };
 
 let updateBot = (data) => {
-  return Bot.findById(data.id).then((bot) => {
+  Bot.findOne({
+    where: {
+      id: data.id
+    }
+  }).then((bot) => {
     if (data.handsPlayed)
       bot.handsPlayed += data.handsPlayed;
     if (data.handsWon)
       bot.handsWon += data.handsWon;
 
-    Bot.update(bot, {
+    Bot.update({
+      handsPlayed: bot.handsPlayed,
+      handsWon: bot.handsWon
+    }, {
       where: {
         id: bot.id
       }

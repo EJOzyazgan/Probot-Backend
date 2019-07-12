@@ -133,7 +133,7 @@ updateTable = (table) => {
 
 openNewTable = (buyin, res, bot) => {
   return Table.create({tableType: 'pvp', numPlayers: 1, 'config.BUYIN': buyin}).then(table => {
-    engine.start(table, [bot]);
+    engine.start(table.dataValues, [bot]);
     return res.status(200).json({msg: 'Waiting for other players'});
   }).catch(err => {
     return res.status(400).json({msg: 'Could not join table', error: err})
