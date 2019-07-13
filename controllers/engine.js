@@ -155,10 +155,5 @@ let updateBot = (data) => {
 };
 
 let createMetric = (data) => {
-  Metric.create(data)
-    .then((bot) => {
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  Metric.create(data);
 };

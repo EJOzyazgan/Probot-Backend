@@ -4,6 +4,7 @@ const playerStatus = require('../domain/player-status');
 const tournamentStatus = require('../../poker-engine/domain/tournament-status');
 const logger = require('../../storage/logger');
 const engine = require('../../index');
+const constants = require('../../../config/constants');
 
 /**
  * @function
@@ -31,7 +32,7 @@ exports = module.exports = async function resetGamestate(gs) {
       player.totalWinnings += player.chips;
       engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
       engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: player.chips}));
-      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: 'totalWinnings', value: player.totalWinnings, botId: player.id}));
+      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.TOTAL_WINNINGS, value: player.totalWinnings, botId: player.id}));
     }
     return !player.willLeave
   });
