@@ -1,7 +1,5 @@
 'use strict';
 
-// const Table = require('./table').schema;
-
 module.exports = (sequalize, DataTypes) => {
   const Bot = sequalize.define('Bot', {
     name: {
@@ -35,6 +33,10 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
+    totalWinnings: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
     lastPlayed: {
       type: DataTypes.DATE,
       defaultValue: null
@@ -46,6 +48,10 @@ module.exports = (sequalize, DataTypes) => {
     tablesPlayed: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       defaultValue: []
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     }
   });
 
@@ -54,6 +60,11 @@ module.exports = (sequalize, DataTypes) => {
       as: 'user',
       onDelete: 'CASCADE',
       foreignKey: 'userId'
+    });
+    Bot.hasMany(models.Metric, {
+        as: 'metrics',
+        onDelete: 'CASCADE',
+        foreignKey: 'botId'
     });
   };
 

@@ -7,10 +7,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const models = require('./models');
 
-const usersRouter = require('./routes/users');
-const tournamentRouter = require('./routes/tournament');
-const botRouter = require('./routes/bot');
-const tableRouter = require('./routes/table');
+const routeIndex = require('./routes/index');
 
 const port = process.env.PORT || 3000;
 
@@ -48,10 +45,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
-app.use('/api/tournament', tournamentRouter);
-app.use('/api/user', usersRouter);
-app.use('/api/bot', botRouter);
-app.use('/api/table', tableRouter);
+app.use('/api', routeIndex);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

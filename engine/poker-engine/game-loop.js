@@ -14,6 +14,7 @@ const runTeardownTasks = require('./teardown-tasks');
 const play = require('./bet-loop');
 
 const engine = require('../index');
+const constants = require('../../config/constants');
 
 
 exports = module.exports = function* dealer(gs){
@@ -47,6 +48,7 @@ exports = module.exports = function* dealer(gs){
 
     gs.players.forEach(player => {
       engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
+      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.HAND_PLAYED, value: 1, botId: player.id}));
     });
 
     // when before a new hand starts,
