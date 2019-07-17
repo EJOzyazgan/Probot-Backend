@@ -8,6 +8,9 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const email = require('../controllers/email');
 const moment = require('moment');
+const Op = require('sequelize').Op;
+
+const REFERRAL_REWARD = 2000;
 
 router.post('/create', async (req, res) => {
   User.create(req.body)
@@ -18,12 +21,26 @@ router.post('/create', async (req, res) => {
         tokenExpires: moment().add(1, 'hour').format()
       });
 
-      email.sendAccountVerification(`http:\/\/probotplayground.com\/api\/user\/validate\/token\/${token.token}`, user.email);
+      email.sendAccountVerification(`https:\/\/probotplayground.com\/api\/user\/validate\/token\/${token.token}`, user.email);
       return res.status(200).json(user)
     })
     .catch((error) => {
       return res.status(400).json({msg: 'Error creating user', error: error});
     });
+});
+
+router.get('/referral/:email', passport.authenticate('jwt', {session: false}), async  (req, res) => {
+  User.findOne({
+    where: {
+      id: req.user.dataValues.id
+    },
+    attributes: ['username', 'referralCode']
+  }).then(user => {
+    email.sendReferral(`https:\/\/probotplayground.com\/auth\/signup\/${user.referralCode}`, req.params.email, user.username);
+    res.status(200).json({msg: 'Referral link sent!'});
+  }).catch(err => {
+    return res.status(400).json({msg: 'Error finding user', error: err});
+  })
 });
 
 router.get('/validate/token/:token', async (req, res) => {
@@ -40,13 +57,34 @@ router.get('/validate/token/:token', async (req, res) => {
     User.findOne({
       where: {
         id: token.userId
-      }
+      },
+      attributes: ['id', 'isVerified', 'referredBy', 'chips', 'referralCode']
     }).then(user => {
       if (!user) {
-        return res.status(400).json({msg: 'Unable to find user'})
+        return res.status(400).json({msg: 'Unable to find user'});
       }
 
       user.isVerified = true;
+
+      if (user.referredBy) {
+        user.chips += REFERRAL_REWARD;
+
+        User.findOne({
+          where: {
+            referralCode: user.referredBy
+          },
+          attributes: ['id', 'chips', 'referralCode']
+        }).then(referralUser => {
+          if (referralUser) {
+            referralUser.chips += REFERRAL_REWARD;
+            referralUser.save();
+          }
+        }).catch(err => {
+          console.log(err);
+          return res.status(400).json({msg: 'Error finding referral user', error: err});
+        })
+      }
+
       user.save().then(savedUser => {
         if (!savedUser) {
           return res.status(400).json({msg: 'Unable to update user'})
@@ -98,7 +136,7 @@ router.get('/reset-password/:email', async (req, res) => {
         console.log(err);
     });
 
-    email.sendResetPassword(`http:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email);
+    email.sendResetPassword(`https:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email);
     return res.status(200).json({msg: 'Reset password email sent'});
   }).catch(error => {
 
@@ -138,19 +176,32 @@ router.post('/login', async (req, res, next) => {
 router.post('/exists', async (req, res) => {
   User.findOne({
     where: {
-      email: req.body.email
+      [Op.or]: [{
+        email: req.body.email
+      }, {
+        username: req.body.username
+      }]
     }
   }).then((user) => {
     if (!user) {
       return res.status(200).json({
         exists: false,
-        msg: 'Email not already used',
+        msg: 'Email and username available',
       });
     }
+
+    if (user.email === req.body.email) {
+      return res.status(200).json({
+        exists: true,
+        msg: 'Email already used',
+      });
+    }
+
     return res.status(200).json({
       exists: true,
-      msg: 'Email already used',
+      msg: 'Username already used',
     });
+
   }).catch((error) => res.status(400).json({msg: 'Error finding account', error: error}));
 });
 

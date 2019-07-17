@@ -38,8 +38,22 @@ sendResetPassword = (link, email) => {
   });
 };
 
+sendReferral = (link, email, username) => {
+  transporter.sendMail({
+    from: '"Probot Playground" <donotreply@probotplayground.com>', // sender address
+    to: email, // list of receivers
+    subject: 'Friend Referral', // Subject line
+    text: `${username} has invited you to join Probot Playground. Use the following link to get started: ${link}`, // plain text body
+    html: `<p>${username} has invited you to join Probot Playground. Use the following link to get started: <a href='${link}'>Create Account</a></p>` // html body
+  }, (err) => {
+    if (err)
+      console.log(err);
+  });
+};
+
 module.exports = {
-  sendAccountVerification: sendAccountVerification,
-  sendResetPassword: sendResetPassword
+  sendAccountVerification,
+  sendResetPassword,
+  sendReferral
 };
 

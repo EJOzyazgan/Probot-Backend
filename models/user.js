@@ -1,7 +1,7 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
-const moment = require('moment');
+const crypto = require('crypto');
 
 module.exports = (sequalize, DataTypes) => {
   const User = sequalize.define('User', {
@@ -41,6 +41,14 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.DATE,
       defaultValue: null
     },
+    referralCode: {
+      type: DataTypes.STRING,
+      defaultValue: null
+    },
+    referredBy: {
+      type: DataTypes.STRING,
+      defaultValue: null
+    },
     chips: {
       type: DataTypes.FLOAT,
       defaultValue: 1000
@@ -71,6 +79,10 @@ module.exports = (sequalize, DataTypes) => {
     if (user.changed('password')) {
       console.log(user.password);
       user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10), null);
+    }
+
+    if (!user.referralCode) {
+      user.referralCode = user.username + '-' + crypto.randomBytes(4).toString('hex')
     }
   });
 
