@@ -31,11 +31,15 @@ module.exports = (sequalize, DataTypes) => {
     },
     lastLoggedIn: {
       type: DataTypes.DATE,
-      defaultValue: moment.utc()
+      defaultValue: null
     },
     daysLoggedIn: {
       type: DataTypes.INTEGER,
-      defaultValue: 1
+      defaultValue: 0
+    },
+    firstLoggedIn: {
+      type: DataTypes.DATE,
+      defaultValue: null
     },
     chips: {
       type: DataTypes.FLOAT,

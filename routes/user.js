@@ -192,8 +192,8 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
       isAdmin: req.body.isAdmin,
       passwordResetToken: req.body.passwordResetToken,
       passwordResetExpires: req.body.passwordResetExpires,
-      isVerified: req.body.isVerified
-
+      isVerified: req.body.isVerified,
+      firstLoggedIn: req.body.firstLoggedIn
     }).then(updatedUser => res.status(200).json(updatedUser))
       .catch(error => res.status(400).json({msg: 'Error updating user', error: error})))
     .catch((error) => res.status(400).json({msg: 'Error finding user', error: error}));
