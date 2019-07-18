@@ -51,9 +51,23 @@ sendReferral = (link, email, username) => {
   });
 };
 
+sendFriendInvite = (link, email, username) => {
+  transporter.sendMail({
+    from: '"Probot Playground" <donotreply@probotplayground.com>', // sender address
+    to: email, // list of receivers
+    subject: 'Friend Invite', // Subject line
+    text: `${username} would like to be friends. Use the following link to accept: ${link}`, // plain text body
+    html: `<p>${username} would like to be friends. Use the following link to accept: <a href='${link}'>Accept</a></p>` // html body
+  }, (err) => {
+    if (err)
+      console.log(err);
+  });
+};
+
 module.exports = {
   sendAccountVerification,
   sendResetPassword,
-  sendReferral
+  sendReferral,
+  sendFriendInvite
 };
 

@@ -54,16 +54,12 @@ module.exports = (sequalize, DataTypes) => {
       defaultValue: 1000
     },
     rankClass: {
-      type: DataTypes.STRING,
-      defaultValue: 'Bronze'
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },
     rank: {
       type: DataTypes.INTEGER,
       defaultValue: 0
-    },
-    friends: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      defaultValue: []
     },
     icon: {
       type: DataTypes.STRING,
@@ -98,6 +94,12 @@ module.exports = (sequalize, DataTypes) => {
   User.associate = models => {
     User.hasMany(models.Bot, {
       as: 'bots',
+      onDelete: 'CASCADE',
+      foreignKey: 'userId'
+    });
+
+    User.hasMany(models.Friend, {
+      as: 'friends',
       onDelete: 'CASCADE',
       foreignKey: 'userId'
     });
