@@ -18,6 +18,9 @@ const io = require('socket.io')(http);
 
 require('./config/passport');
 
+// Start cron jobs
+require('./controllers/cron');
+
 app.use(function (req,res,next) {
   res.setHeader("Access-Control-Allow-Origin",  "*");
   res.setHeader('Access-Control-Allow-Methods', "PUT, PATCH, GET, POST, DELETE, OPTIONS");

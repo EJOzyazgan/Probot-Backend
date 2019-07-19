@@ -185,7 +185,8 @@ router.post('/get/friends', passport.authenticate('jwt', {session: false}), asyn
       id: {
         [Op.in]: req.body
       }
-    }
+    },
+    order: [['rank', 'ASC']]
   }).then(friends => res.status(200).json({msg: 'Friends Retrieved', friends: friends}))
     .catch(err => {
       console.log(err);
