@@ -54,8 +54,8 @@ module.exports = (sequalize, DataTypes) => {
       defaultValue: 1000
     },
     rankClass: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
+      type: DataTypes.STRING,
+      defaultValue: 'Bronze'
     },
     rank: {
       type: DataTypes.INTEGER,
