@@ -4,9 +4,9 @@ const moment = require('moment');
 const Metric = models.Metric;
 
 const startTime = moment().subtract(1, 'year');
-const botId = process.env.BOT_ID;
-
 const endTime = moment();
+
+const botId = process.argv[2];
 
 const types = [constants.HAND_PLAYED, constants.HAND_WON, constants.TOTAL_WINNINGS];
 
@@ -27,5 +27,5 @@ while (startTime.diff(endTime) < 0) {
     Metric.create(data);
   }
 
-  startTime.add(1, 'day');
+  startTime.add(15, 'minutes');
 }
