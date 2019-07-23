@@ -3,62 +3,83 @@ const router = express.Router();
 const passport = require('passport');
 const models = require('../models');
 const Bot = models.Bot;
+const Update = models.Update;
+const moment = require('moment');
+const Op = require('sequelize').Op;
 
 router.get('/get/user', passport.authenticate('jwt', {session: false}), (req, res, next) => {
-    Bot.findOne({
-        where: {
-            userId: req.user.dataValues.id
-        }
-    }).then((bot) => {
-        return res.status(200).json(bot);
-    }).catch((e) => {
-        res.status(400).json({msg: 'Error finding bot', error: e});
-    });
+  Bot.findOne({
+    where: {
+      userId: req.user.dataValues.id
+    }
+  }).then((bot) => {
+    return res.status(200).json(bot);
+  }).catch((e) => {
+    res.status(400).json({msg: 'Error finding bot', error: e});
+  });
 });
 
 router.post('/create', async (req, res) => {
-   Bot.create(req.body)
-        .then((bot) => res.status(200).json(bot))
-        .catch((error) => {
-            console.log(error);
-            res.status(400).json({msg: 'Error creating bot', error: error});
-        });
+  Bot.create(req.body)
+    .then((bot) => res.status(200).json(bot))
+    .catch((error) => {
+      console.log(error);
+      res.status(400).json({msg: 'Error creating bot', error: error});
+    });
 });
 
 router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req, res) => {
-    Bot.update({
-        name: req.body.name,
-        serviceUrl: req.body.serviceUrl,
-        tournaments: req.body.tournaments,
-        handsPlayed: req.body.handsPlayed,
-        handsWon: req.body.handsWon,
-        lastPlayed: req.body.lastPlayed,
-        currentTable: req.body.currentTable,
-        tablesPlayed: req.body.tablesPlayed
-    }, {
-        where: {
-            id: req.params.id
-        },
-        returning: true
-    }).then(([ rowsUpdate, [updatedBot] ]) => {
-        return res.status(200).json(updatedBot);
-    }).catch((e) => {
-        res.status(400).json({msg: 'Error updating bot', error: e});
-    });
+  Bot.update({
+    name: req.body.name,
+    serviceUrl: req.body.serviceUrl,
+    tournaments: req.body.tournaments,
+    handsPlayed: req.body.handsPlayed,
+    handsWon: req.body.handsWon,
+    lastPlayed: req.body.lastPlayed,
+    currentTable: req.body.currentTable,
+    tablesPlayed: req.body.tablesPlayed
+  }, {
+    where: {
+      id: req.params.id
+    },
+    returning: true
+  }).then(([rowsUpdate, [updatedBot]]) => {
+    return res.status(200).json(updatedBot);
+  }).catch((e) => {
+    res.status(400).json({msg: 'Error updating bot', error: e});
+  });
 });
 
 router.post('/register', passport.authenticate('jwt', {session: false}), async (req, res) => {
-    Bot.findByIdAndUpdate(req.body.id, {
-        $addToSet: {
-            tournaments: {
-                tournamentId: req.body.tournamentId,
-                score: 0
-            }
-        }
-    }, {new: true}, (err, bot) => {
-        if (err) return res.status(400).send(err);
-        res.status(200).send("Bot Registered");
-    });
+  Bot.findByIdAndUpdate(req.body.id, {
+    $addToSet: {
+      tournaments: {
+        tournamentId: req.body.tournamentId,
+        score: 0
+      }
+    }
+  }, {new: true}, (err, bot) => {
+    if (err) return res.status(400).send(err);
+    res.status(200).send("Bot Registered");
+  });
+});
+
+router.post('/get/data', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  Update.findAll({
+    where: {
+      playerId: '' + req.body.botId,
+      createdAt: {
+        [Op.gte]: moment().subtract(req.body.timePeriod[2], req.body.timePeriod[1])
+      },
+    },
+    attributes: {
+      exclude: ['id', 'tournamentId', 'playerId', 'updatedAt']
+    }
+  }).then(updates => {
+    return res.status(200).send(updates);
+  }).catch(err => {
+    return res.status(400).json({msg: 'Error getting data', error: err});
+  });
 });
 
 // router.post('/register/all', async (req, res) => {
