@@ -22,7 +22,7 @@ router.post('/create', async (req, res) => {
         tokenExpires: moment().add(1, 'hour').format()
       });
 
-      email.sendAccountVerification(`http:\/\/probotplayground.com\/api\/user\/validate\/token\/${token.token}`, user.email);
+      email.sendAccountVerification(`http:\/\/probotplayground.com\/#\/auth\/email-verification\/${token.token}`, user.email);
       return res.status(200).json(user)
     })
     .catch((error) => {
@@ -152,30 +152,39 @@ router.get('/add/friend/:email', passport.authenticate('jwt', {session: false}),
     where: {
       id: req.user.dataValues.id
     },
-    attributes: ['email', 'username']
+    attributes: ['referralCode', 'username']
   }).then(user => {
-    email.sendFriendInvite(`http:\/\/probotplayground.com\/api\/user\/accept\/friend-request\/${user.email}\/${req.params.email}`, req.params.email, user.username);
-    res.status(200).json({msg: 'Friend request sent!'});
+    User.findOne({
+      where: {
+        email: req.params.email
+      }
+    }).then(friend => {
+      email.sendFriendInvite(`http:\/\/probotplayground.com\/#\/auth\/friend-request\/${user.referralCode}\/${friend.referralCode}`, friend.email, user.username);
+      res.status(200).json({msg: 'Friend request sent!'});
+    }).catch(err => {
+      return res.status(400).json({msg: 'Error finding user', error: err});
+    });
   }).catch(err => {
     return res.status(400).json({msg: 'Error finding user', error: err});
   });
 });
 
-router.get('/accept/friend-request/:requestEmail/:acceptEmail', async (req, res) => {
+router.get('/accept/friend-request/:userReferral/:friendReferral', async (req, res) => {
   User.findAll({
     where: {
-      email: {
-        [Op.in]: [req.params.requestEmail, req.params.acceptEmail]
+      referralCode: {
+        [Op.in]: [req.params.userReferral, req.params.friendReferral]
       }
     },
     attributes: ['id']
   }).then(users => {
+    console.log(users);
     if (users.length === 2) {
       Friend.create({userId: users[0].id, friendId: users[1].id});
       Friend.create({userId: users[1].id, friendId: users[0].id});
       return res.status(200).json({msg: 'Friend request accepted'});
     }
-    return res.status(200).json({msg: 'Friend request denied'});
+    return res.status(200).json({msg: 'Not enough users found'});
   }).catch(err => rea.status(400).json({msg: 'Error accepting friend request', error: err}));
 });
 
