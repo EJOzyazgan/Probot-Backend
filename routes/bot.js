@@ -4,6 +4,7 @@ const passport = require('passport');
 const models = require('../models');
 const Bot = models.Bot;
 const Update = models.Update;
+const User = models.User;
 const moment = require('moment');
 const Op = require('sequelize').Op;
 
@@ -17,6 +18,40 @@ router.get('/get/user', passport.authenticate('jwt', {session: false}), (req, re
   }).catch((e) => {
     res.status(400).json({msg: 'Error finding bot', error: e});
   });
+});
+
+router.get('/get/admin', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  let admin = false;
+
+  await User.findOne({
+    where: {
+      id: req.user.dataValues.id,
+      isAdmin: true
+    },
+    attributes: ['id', 'isAdmin']
+  }).then(user => {
+    if (user) {
+      admin = true;
+    }
+  }).catch(err => {
+    return res.status(400).json({msg: 'Error validating admin', error: err});
+  });
+
+  if (admin) {
+    Bot.findAll({
+      where: {
+        botType: {
+          [Op.ne]: 'userBot'
+        }
+      }
+    }).then(bots => {
+      return res.status(200).send(bots);
+    }).catch(err => {
+      return res.status(400).json({msg: 'Error getting admin bots', error: err});
+    })
+  }
+
+  return res.stats(200).json({msg: 'Not a valid admin'});
 });
 
 router.post('/create', async (req, res) => {
@@ -37,7 +72,8 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req,
     handsWon: req.body.handsWon,
     lastPlayed: req.body.lastPlayed,
     currentTable: req.body.currentTable,
-    tablesPlayed: req.body.tablesPlayed
+    tablesPlayed: req.body.tablesPlayed,
+    botType: req.body.botType
   }, {
     where: {
       id: req.params.id
@@ -50,19 +86,19 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req,
   });
 });
 
-router.post('/register', passport.authenticate('jwt', {session: false}), async (req, res) => {
-  Bot.findByIdAndUpdate(req.body.id, {
-    $addToSet: {
-      tournaments: {
-        tournamentId: req.body.tournamentId,
-        score: 0
-      }
-    }
-  }, {new: true}, (err, bot) => {
-    if (err) return res.status(400).send(err);
-    res.status(200).send("Bot Registered");
-  });
-});
+// router.post('/register', passport.authenticate('jwt', {session: false}), async (req, res) => {
+//   Bot.findByIdAndUpdate(req.body.id, {
+//     $addToSet: {
+//       tournaments: {
+//         tournamentId: req.body.tournamentId,
+//         score: 0
+//       }
+//     }
+//   }, {new: true}, (err, bot) => {
+//     if (err) return res.status(400).send(err);
+//     res.status(200).send("Bot Registered");
+//   });
+// });
 
 router.post('/get/data', passport.authenticate('jwt', {session: false}), async (req, res) => {
   Update.findAll({

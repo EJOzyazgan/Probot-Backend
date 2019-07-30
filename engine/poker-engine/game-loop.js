@@ -1,4 +1,3 @@
-
 'use strict';
 
 const logger = require('../storage/logger');
@@ -17,7 +16,7 @@ const engine = require('../index');
 const constants = require('../../config/constants');
 
 
-exports = module.exports = function* dealer(gs){
+exports = module.exports = function* dealer(gs) {
   let config = gs.config;
 
   function sleep(time) {
@@ -25,65 +24,73 @@ exports = module.exports = function* dealer(gs){
   }
 
   function waitResume() {
-    return new Promise(function(res, rej) {
-      const time = setInterval(function() {
-        if (gs.tournamentStatus === gameStatus.play){
+    return new Promise(function (res, rej) {
+      const time = setInterval(function () {
+        if (gs.tournamentStatus === gameStatus.play) {
           res(clearInterval(time));
         }
       }, 5000);
     });
   }
 
-  while (gs.tournamentStatus !== gameStatus.stop){
+  while (gs.tournamentStatus !== gameStatus.stop) {
 
     //
     // break here until the tournament is resumed
-    if (gs.tournamentStatus === gameStatus.pause){
-      logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
+    if (gs.tournamentStatus === gameStatus.pause) {
+      logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
       yield waitResume();
     }
 
     const activePlayers = gs.activePlayers;
     const foldedPlayers = gs.players.filter(player => player.status === playerStatus.folded);
 
-    gs.players.forEach(player => {
-      engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
-      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.HAND_PLAYED, value: 1, botId: player.id}));
-    });
+    if (gs.tableType !== 'sandbox') {
+      gs.players.forEach(player => {
+        engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
+        engine.emit('gamestate:create-metric', Object.assign({}, {
+          metricType: constants.HAND_PLAYED,
+          value: 1,
+          botId: player.id
+        }));
+      });
+    }
 
     // when before a new hand starts,
     // there is only one active player
     // the current game is finished.
 
-    if (activePlayers.length + foldedPlayers.length === 1){
+    if (activePlayers.length + foldedPlayers.length === 1) {
 
       // each player takes points
       // on the basis of their rank...
       // then eventually a new game starts.
 
       const playerCount = gs.gameChart.unshift(activePlayers[0].name);
-      const points = config.AWARDS[playerCount-2];
+      const points = config.AWARDS[playerCount - 2];
 
-      const finalGameChart = gs.gameChart.map((playerName, i) => ({ name: playerName, pts: points[i] }));
+      const finalGameChart = gs.gameChart.map((playerName, i) => ({name: playerName, pts: points[i]}));
 
-      logger.info('Final ranks for game %d: %s', gs.gameProgressiveId, getRankingLogMessage(finalGameChart), { tag: gs.handUniqueId })
+      logger.info('Final ranks for game %d: %s', gs.gameProgressiveId, getRankingLogMessage(finalGameChart), {tag: gs.handUniqueId})
 
-      yield save({ type: 'points', tournamentId: gs.tournamentId, gameId: gs.gameProgressiveId, rank: finalGameChart });
-
+      yield save({type: 'points', tournamentId: gs.tournamentId, gameId: gs.gameProgressiveId, rank: finalGameChart});
 
 
       // restore players' initial conditions
-      gs.players.forEach(player => { player.status = playerStatus.active; player.chips = config.BUYIN; });
+      gs.players.forEach(player => {
+        player.status = playerStatus.active;
+        player.chips = config.BUYIN;
+      });
       gs.gameChart = null;
 
-      if (gs.tournamentStatus === gameStatus.latest || gs.gameProgressiveId === config.MAX_GAMES){
+      if (gs.tournamentStatus === gameStatus.latest || gs.gameProgressiveId === config.MAX_GAMES) {
         gs.tournamentStatus = gameStatus.stop;
         continue;
       }
 
       // warm up
-      if (config.WARMUP){
-        if (gs.gameProgressiveId <= config.WARMUP.GAME){
+      if (config.WARMUP) {
+        if (gs.gameProgressiveId <= config.WARMUP.GAME) {
           yield sleep(config.WARMUP.WAIT);
         }
       }
@@ -96,13 +103,12 @@ exports = module.exports = function* dealer(gs){
 
     gs.handUniqueId = `${gs.pid}_${gs.tournamentId}_${gs.gameProgressiveId}-${gs.handProgressiveId}`;
 
-    logger.info('Starting hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
+    logger.info('Starting hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
 
 
+    if (gs.tournamentStatus === gameStatus.play || gs.tournamentStatus === gameStatus.latest) {
 
-    if (gs.tournamentStatus === gameStatus.play || gs.tournamentStatus === gameStatus.latest){
-
-      if (config.HANDWAIT){
+      if (config.HANDWAIT) {
         yield sleep(config.HANDWAIT);
       }
 
@@ -112,7 +118,14 @@ exports = module.exports = function* dealer(gs){
 
       runSetupTasks(gs);
 
-      yield save({ type: 'setup', handId: gs.handUniqueId, pot: gs.pot, sb: gs.sb, ante: gs.ante || 0, players: gs.players });
+      yield save({
+        type: 'setup',
+        handId: gs.handUniqueId,
+        pot: gs.pot,
+        sb: gs.sb,
+        ante: gs.ante || 0,
+        players: gs.players
+      });
 
 
       // play the game
@@ -134,13 +147,15 @@ exports = module.exports = function* dealer(gs){
     //
     // this is the gs.handProgressiveId° hand played
     // this info is important to compute the blinds level
+
+    if (gs.tableType !== 'sandbox') {
+      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.PLATFORM_HAND_PLAYED, value: 1}));
+    }
     gs.handProgressiveId++;
 
   }
 
 };
-
-
 
 
 /**
@@ -155,8 +170,8 @@ exports = module.exports = function* dealer(gs){
  *
  * @returns {String}
  */
-function getRankingLogMessage(ranking){
-  return ranking.reduce(function(msg, player) {
+function getRankingLogMessage(ranking) {
+  return ranking.reduce(function (msg, player) {
     return msg += `${player.name}: ${player.pts}, `, msg;
-  }, '').trim().slice(0,-1);
+  }, '').trim().slice(0, -1);
 }

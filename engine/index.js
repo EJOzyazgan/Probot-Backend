@@ -35,6 +35,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
       const gs = {};
       gs.pid = process.pid;
       gs.tournamentId = `${tournament.id}`;
+      gs.tableType = tournament.tableType;
       gs.config = tournament.config;
       gs.gameProgressiveId = gameId;
       gs.handProgressiveId = 1;

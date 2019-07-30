@@ -9,7 +9,11 @@ module.exports = (sequalize, DataTypes) => {
         notNull: {msg: 'Must provide name'}
       }
     },
-    isSandboxBot: {
+    botType: {
+      type: DataTypes.STRING,
+      defaultValue: 'userBot'
+    },
+    isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
@@ -34,8 +38,8 @@ module.exports = (sequalize, DataTypes) => {
       defaultValue: 0
     },
     totalWinnings: {
-        type: DataTypes.FLOAT,
-        defaultValue: 0
+      type: DataTypes.FLOAT,
+      defaultValue: 0
     },
     lastPlayed: {
       type: DataTypes.DATE,
@@ -51,20 +55,20 @@ module.exports = (sequalize, DataTypes) => {
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false
-    }
+    },
   });
 
-  Bot.associate = models => {
+  Bot.references = models  => {
+    Bot.hasMany(models.Metric, {
+      as: 'metrics',
+      onDelete: 'CASCADE',
+      foreignKey: 'botId',
+    });
+
     Bot.belongsTo(models.User, {
-      as: 'user',
+      as: 'bot',
       onDelete: 'CASCADE',
       foreignKey: 'userId'
-    });
-    Bot.hasMany(models.Metric, {
-        as: 'metrics',
-        onDelete: 'CASCADE',
-        foreignKey: 'botId'
     });
   };
 

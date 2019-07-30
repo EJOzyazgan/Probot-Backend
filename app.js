@@ -55,11 +55,11 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-//models.sequelize.sync({alter: true}).then(() => {
+// models.sequelize.sync({alter: true}).then(() => {
   http.listen(port, () => {
     console.log(`Listening on port ${port}!`)
   });
-//});
+// });
 
 // error handler
 app.use(function(err, req, res, next) {

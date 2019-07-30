@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const models = require('../models');
 const User = models.User;
+const Bot = models.Bot;
 const Token = models.Token;
 const Friend = models.Friend;
 const passport = require('passport');
@@ -272,17 +273,14 @@ router.get('/get', passport.authenticate('jwt', {session: false}), async (req, r
     },
     attributes: {exclude: ['password']},
     include: [{
-      as: 'bots',
-      model: models.Bot
-    }, {
       as: 'friends',
       model: models.Friend,
       attributes: ['friendId']
     }]
   }).then((user) => {
     return res.status(200).json(user);
-  }).catch((e) => {
-    res.status(400).json({msg: 'Error finding user', error: e});
+  }).catch((err) => {
+    return res.status(400).json({msg: 'Error finding user', error: err});
   });
 });
 
