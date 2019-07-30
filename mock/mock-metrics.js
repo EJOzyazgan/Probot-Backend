@@ -6,15 +6,24 @@ const Metric = models.Metric;
 const startTime = moment().subtract(1, 'year');
 const endTime = moment();
 
-const botId = process.argv[2];
+const metricType = process.argv[2];
+const botId = process.argv[3];
 
-const types = [constants.HAND_PLAYED, constants.HAND_WON, constants.TOTAL_WINNINGS];
+const userType = [constants.HAND_PLAYED, constants.HAND_WON, constants.TOTAL_WINNINGS];
+const adminType = [constants.PLATFORM_HAND_PLAYED, constants.REFERRAL_RATE,
+  constants.REFERRAL_ACTIVATION_RATE, constants.REFERRAL_RATE];
+
+let types = userType;
+
+if (metricType && metricType === 'admin') {
+  types = adminType;
+}
 
 while (startTime.diff(endTime) < 0) {
   for (let i = 0; i < 3; i++) {
     let data = {
       metricType: types[i],
-      botId: botId,
+      botId: botId ? botId : null,
       createdAt: startTime.format()
     };
 

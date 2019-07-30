@@ -12,15 +12,14 @@ module.exports = (sequalize, DataTypes) => {
     },
     botId: {
       type: DataTypes.INTEGER,
-      allowNull: false
     }
   });
 
-  Metric.associate = models => {
+  Metric.references = models => {
     Metric.belongsTo(models.Bot, {
       as: 'metrics',
       onDelete: 'CASCADE',
-      foreignKey: 'botId'
+      foreignKey: 'botId',
     });
   };
 

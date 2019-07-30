@@ -1,13 +1,14 @@
 const CronJob = require('cron').CronJob;
 const Op = require('sequelize').Op;
 const models = require('../models');
+const moment = require('moment');
 const User = models.User;
+const Metric = models.Metric;
+const constants = require('../config/constants');
 
 const DAILY_TOP_OFF = 1000;
 
 const rankUsers = new CronJob('0 */1 * * * *', function () {
-  const d = new Date();
-  console.log('Ran:', d);
   User.findAll({
     order: [['chips', 'DESC']]
   }).then(users => {
@@ -19,7 +20,7 @@ const rankUsers = new CronJob('0 */1 * * * *', function () {
         users[i].rankClass = 'Diamond';
       else if (rank <= users.length * 0.30)
         users[i].rankClass = 'Gold';
-      else if (rank <=users.length * 0.60)
+      else if (rank <= users.length * 0.60)
         users[i].rankClass = 'Silver';
       else
         users[i].rankClass = 'Bronze';
@@ -30,8 +31,6 @@ const rankUsers = new CronJob('0 */1 * * * *', function () {
 }, null, true, 'America/Los_Angeles');
 
 const topOffChips = new CronJob('00 00 00 * * *', function () {
-  const d = new Date();
-  console.log('Ran:', d);
   User.findAll({
     where: {
       chips: {
@@ -46,9 +45,56 @@ const topOffChips = new CronJob('00 00 00 * * *', function () {
   })
 }, null, true, 'America/Los_Angeles');
 
+const recordUserMetrics = new CronJob('00 00 12,00 * * *', function () {
+  User.findAll({
+    attributes: ['id', 'referrals', 'isVerified', 'referredBy', 'lastLoggedIn']
+  }).then(users => {
+    let activeUsers = 0;
+    let usersWhoReferred = 0;
+    let referralsSent = 0;
+    let referralsActivated = 0;
+    let accountsActivated = 0;
+
+    const now = moment();
+
+    for (let user of users) {
+      if (moment(user.lastLoggedIn).diff(now, 'weeks') > -1)
+        activeUsers++;
+
+      if (user.referrals > 0) {
+        usersWhoReferred++;
+        referralsSent += user.referrals;
+      }
+
+      if (user.referredBy && user.isVerified) {
+        referralsActivated++;
+        accountsActivated++;
+      } else if (user.isVerified) {
+        accountsActivated++;
+      }
+    }
+
+    Metric.create({
+      metricType: constants.REFERRAL_RATE,
+      value: users.length > 0 ? (usersWhoReferred / users.length) * 100 : 0,
+    });
+
+    Metric.create({
+      metricType: constants.REFERRAL_ACTIVATION_RATE,
+      value: referralsSent > 0 ? (referralsActivated / referralsSent) * 100 : 0,
+    });
+
+    Metric.create({
+      metricType: constants.ACTIVATION_RATE,
+      value: users.length > 0 ? (accountsActivated / users.length) * 100 : 0,
+    });
+  });
+}, null, true, 'America/Los_Angeles');
+
 const startAll = () => {
   rankUsers.start();
   topOffChips.start();
+  recordUserMetrics.start();
 };
 
 startAll();

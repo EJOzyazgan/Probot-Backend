@@ -49,6 +49,10 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.STRING,
       defaultValue: null
     },
+    referrals: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
     chips: {
       type: DataTypes.FLOAT,
       defaultValue: 1000
@@ -68,7 +72,7 @@ module.exports = (sequalize, DataTypes) => {
     isAdmin: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
-    }
+    },
   });
 
   User.beforeSave((user, options) => {
@@ -92,14 +96,16 @@ module.exports = (sequalize, DataTypes) => {
   };
 
   User.associate = models => {
-    User.hasMany(models.Bot, {
-      as: 'bots',
+    User.hasMany(models.Friend, {
+      as: 'friends',
       onDelete: 'CASCADE',
       foreignKey: 'userId'
     });
+  };
 
-    User.hasMany(models.Friend, {
-      as: 'friends',
+  User.references = models => {
+    User.hasOne(models.Bot, {
+      as: 'bot',
       onDelete: 'CASCADE',
       foreignKey: 'userId'
     });

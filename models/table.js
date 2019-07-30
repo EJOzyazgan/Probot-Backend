@@ -6,7 +6,7 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.STRING,
       defaultValue: 'sandbox'
     },
-    active: {
+    isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },

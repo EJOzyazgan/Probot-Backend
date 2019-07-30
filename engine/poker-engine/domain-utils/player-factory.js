@@ -448,9 +448,10 @@ exports = module.exports = function factory(obj, gs) {
 
   player.totalWinnings = obj.totalWinnings - player.chips;
 
-  engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: (player.chips * -1)}));
-  engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
-
+  if (gs.tableType !== 'sandbox') {
+    engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: (player.chips * -1)}));
+    engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
+  }
 
   logger.info('%s (%s), registered as player.', player.name, player.id);
 
