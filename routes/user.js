@@ -11,6 +11,8 @@ const crypto = require('crypto');
 const email = require('../controllers/email');
 const moment = require('moment');
 const Op = require('sequelize').Op;
+const fs = require('fs');
+const path = require('path');
 
 const REFERRAL_REWARD = 2000;
 
@@ -221,15 +223,32 @@ router.post('/login', async (req, res, next) => {
     }
 
     user.comparePassword(req.body.password, (err, isMatch) => {
+      let error = false;
+
       if (isMatch && !err) {
-        let token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.JWTSecretKey, {expiresIn: 86400 * 30});
-        jwt.verify(token, process.env.JWTSecretKey, function (err, data) {
-          if (err)
-            console.log(err);
+        const privateKeyPath = path.join(__dirname, '../config/private.key');
+        const publicKeyPath = path.join(__dirname, '../config/public.key');
+
+        const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+        const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+
+        let token = jwt.sign({id: user.id}, privateKey, {
+          algorithm: 'RS256',
+          expiresIn: '1h'
         });
-        return res.status(200).json({success: true, token: token});
+
+        jwt.verify(token, publicKey, function (err, data) {
+          if (err) {
+            error = true;
+            return res.status(400).send({success: false, msg: 'Error logging in'});
+          }
+        });
+
+        if (!error)
+          return res.status(200).json({success: true, token: token, expiresAt: moment().add(1, 'h').format()});
+      } else {
+        return res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
       }
-      return res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
     })
   }).catch((error) => res.status(400).send(error));
 });
@@ -314,3 +333,4 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
 
 
 module.exports = router;
+
