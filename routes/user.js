@@ -16,6 +16,12 @@ const path = require('path');
 
 const REFERRAL_REWARD = 2000;
 
+const privateKeyPath = path.join(__dirname, '../config/private.key');
+const publicKeyPath = path.join(__dirname, '../config/public.key');
+
+const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+
 router.post('/create', async (req, res) => {
   User.create(req.body)
     .then(async (user) => {
@@ -137,14 +143,24 @@ router.get('/reset-password/:email', async (req, res) => {
       return res.status(200).json({msg: 'User with that email not found'})
     }
 
-    let token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.JWTSecretKey, {expiresIn: 86400 * 30});
-    jwt.verify(token, process.env.JWTSecretKey, function (err, data) {
-      if (err)
-        console.log(err);
+    let token = jwt.sign({id: user.id}, privateKey, {
+      algorithm: 'RS256',
+      expiresIn: '1h'
     });
 
-    email.sendResetPassword(`http:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email, user.username);
-    return res.status(200).json({msg: 'Reset password email sent'});
+    let error = false;
+
+    jwt.verify(token, publicKey, function (err, data) {
+      if (err) {
+        error = true;
+        return res.status(400).send({success: false, msg: 'Error reset password email token'});
+      }
+    });
+
+    if (!error) {
+      email.sendResetPassword(`http:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email, user.username);
+      return res.status(200).json({msg: 'Reset password email sent'});
+    }
   }).catch(error => {
 
   });
@@ -226,12 +242,6 @@ router.post('/login', async (req, res, next) => {
       let error = false;
 
       if (isMatch && !err) {
-        const privateKeyPath = path.join(__dirname, '../config/private.key');
-        const publicKeyPath = path.join(__dirname, '../config/public.key');
-
-        const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
-        const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-
         let token = jwt.sign({id: user.id}, privateKey, {
           algorithm: 'RS256',
           expiresIn: '1h'
