@@ -25,7 +25,7 @@ const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
 router.post('/create', async (req, res) => {
   User.create(req.body)
     .then(async (user) => {
-      let token = await Token.create({
+      const token = await Token.create({
         userId: user.id,
         token: crypto.randomBytes(16).toString('hex'),
         tokenExpires: moment().add(1, 'hour').format()
@@ -68,13 +68,14 @@ router.get('/validate/token/:token', async (req, res) => {
       where: {
         id: token.userId
       },
-      attributes: ['id', 'isVerified', 'referredBy', 'chips', 'referralCode', 'username']
+      attributes: ['id', 'isVerified', 'referredBy', 'chips', 'referralCode', 'username', 'email']
     }).then(user => {
       if (!user) {
         return res.status(400).json({msg: 'Unable to find user'});
       }
 
       user.isVerified = true;
+      user.referralCode = user.email.split('@', 1)[0] + '-' + crypto.randomBytes(4).toString('hex');
 
       if (user.referredBy) {
         user.chips += REFERRAL_REWARD;
@@ -143,7 +144,7 @@ router.get('/reset-password/:email', async (req, res) => {
       return res.status(200).json({msg: 'User with that email not found'})
     }
 
-    let token = jwt.sign({id: user.id}, privateKey, {
+    const token = jwt.sign({id: user.id}, privateKey, {
       algorithm: 'RS256',
       expiresIn: '1h'
     });
@@ -227,7 +228,7 @@ router.post('/login', async (req, res, next) => {
     where: {
       email: req.body.email
     }
-  }).then((user) => {
+  }).then(user => {
     if (!user) {
       return res.status(400).send({
         msg: 'Authentication failed. User not found.'
@@ -238,13 +239,13 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    user.comparePassword(req.body.password, (err, isMatch) => {
+    user.comparePassword(req.body.password, async (err, isMatch) => {
       let error = false;
 
       if (isMatch && !err) {
-        let token = jwt.sign({id: user.id}, privateKey, {
+        const token = jwt.sign({id: user.id}, privateKey, {
           algorithm: 'RS256',
-          expiresIn: '1h'
+          expiresIn: '15m'
         });
 
         jwt.verify(token, publicKey, function (err, data) {
@@ -254,12 +255,61 @@ router.post('/login', async (req, res, next) => {
           }
         });
 
-        if (!error)
-          return res.status(200).json({success: true, token: token, expiresAt: moment().add(1, 'h').format()});
+        if (!error) {
+          user.refreshToken = crypto.randomBytes(32).toString('hex');
+          console.log(user.refreshToken);
+          await user.save();
+          return res.status(200).json({
+            success: true,
+            token,
+            expiresAt: moment().add(15, 'm').format(),
+            refreshToken: user.refreshToken
+          });
+        }
       } else {
         return res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
       }
     })
+  }).catch((error) => res.status(400).send(error));
+});
+
+router.get('/refresh-token/:refreshToken', async (req, res) => {
+  User.findOne({
+    where: {
+      refreshToken: req.params.refreshToken
+    }
+  }).then(async user => {
+    if (!user) {
+      return res.status(400).send({
+        msg: 'Authentication failed. User not found.'
+      });
+    }
+
+    let error = false;
+
+    const token = jwt.sign({id: user.id}, privateKey, {
+      algorithm: 'RS256',
+      expiresIn: '15m'
+    });
+
+    jwt.verify(token, publicKey, function (err, data) {
+      if (err) {
+        error = true;
+        return res.status(400).send({success: false, msg: 'Error logging in'});
+      }
+    });
+
+    if (!error) {
+      user.refreshToken = crypto.randomBytes(32).toString('hex');
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        token,
+        expiresAt: moment().add(15, 'm').format(),
+        refreshToken: user.refreshToken
+      });
+    }
+    return res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
   }).catch((error) => res.status(400).send(error));
 });
 
