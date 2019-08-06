@@ -73,16 +73,16 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
+    refreshToken: {
+      type: DataTypes.STRING,
+      defaultValue: null
+    }
   });
 
   User.beforeSave((user, options) => {
     if (user.changed('password')) {
       console.log(user.password);
       user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10), null);
-    }
-
-    if (!user.referralCode) {
-      user.referralCode = user.username + '-' + crypto.randomBytes(4).toString('hex')
     }
   });
 

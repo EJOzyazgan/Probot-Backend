@@ -43,3 +43,6 @@ Thumbs.db
 
 # config file
 /package-lock.json
+
+private.key
+public.key
