@@ -78,8 +78,16 @@ router.get('/user-analytics', passport.authenticate('jwt',  {session: false}), (
   });
 });
 
-router.get('/test', (req, res) => {
-  Metric.create(req.body);
+router.get('/top-players', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  User.findAll({
+    order: [['rank', 'ASC']],
+    attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
+    limit: 100,
+  }).then(topPlayers => res.status(200).send(topPlayers))
+    .catch(err => {
+      console.log(err);
+      res.status(400).json({msg: 'Error getting top players', error: err});
+    });
 });
 
 const calculateUserAnalytics = users => {
