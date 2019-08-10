@@ -83,10 +83,26 @@ sendFriendInvite = (link, email, friendUsername, username, friendEmail) => {
   }).then(() => console.log('invite email sent'));
 };
 
+sendSupport = (email, name, message) => {
+  emailTemplate.send({
+    template: 'support',
+    message: {
+      from: 'Probot Playground <donotreply@probotplayground.com>', // sender address
+      to: 'support@probotplayground.com',
+    },
+    locals: {
+      email,
+      name,
+      message,
+    },
+  }).then(() =>console.log('support email sent'));
+};
+
 module.exports = {
   sendAccountVerification,
   sendResetPassword,
   sendReferral,
-  sendFriendInvite
+  sendFriendInvite,
+  sendSupport,
 };
 
