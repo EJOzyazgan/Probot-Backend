@@ -8,7 +8,7 @@ const Friend = models.Friend;
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const email = require('../controllers/email');
+const emailController = require('../controllers/email');
 const moment = require('moment');
 const Op = require('sequelize').Op;
 const fs = require('fs');
@@ -31,7 +31,7 @@ router.post('/create', async (req, res) => {
         tokenExpires: moment().add(1, 'hour').format()
       });
 
-      email.sendAccountVerification(`http:\/\/probotplayground.com\/#\/auth\/email-verification\/${token.token}`, user.email, user.username);
+      emailController.sendAccountVerification(`http:\/\/probotplayground.com\/#\/auth\/email-verification\/${token.token}`, user.email, user.username);
       return res.status(200).json(user)
     })
     .catch((error) => {
@@ -46,7 +46,7 @@ router.get('/referral/:email', passport.authenticate('jwt', {session: false}), a
     },
     attributes: ['username', 'referralCode', 'email']
   }).then(user => {
-    email.sendReferral(`http:\/\/probotplayground.com\/#\/auth\/signup\/${user.referralCode}`, req.params.email, user.username, REFERRAL_REWARD, user.email);
+    emailController.sendReferral(`http:\/\/probotplayground.com\/#\/auth\/signup\/${user.referralCode}`, req.params.email, user.username, REFERRAL_REWARD, user.email);
     res.status(200).json({msg: 'Referral link sent!'});
   }).catch(err => {
     return res.status(400).json({msg: 'Error finding user', error: err});
@@ -159,7 +159,7 @@ router.get('/reset-password/:email', async (req, res) => {
     });
 
     if (!error) {
-      email.sendResetPassword(`http:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email, user.username);
+      emailController.sendResetPassword(`http:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email, user.username);
       return res.status(200).json({msg: 'Reset password email sent'});
     }
   }).catch(error => {
@@ -179,7 +179,7 @@ router.get('/add/friend/:email', passport.authenticate('jwt', {session: false}),
         email: req.params.email
       }
     }).then(friend => {
-      email.sendFriendInvite(`http:\/\/probotplayground.com\/#\/auth\/friend-request\/${user.referralCode}\/${friend.referralCode}`, friend.email, friend.username, user.username, user.email);
+      emailController.sendFriendInvite(`http:\/\/probotplayground.com\/#\/auth\/friend-request\/${user.referralCode}\/${friend.referralCode}`, friend.email, friend.username, user.username, user.email);
       res.status(200).json({msg: 'Friend request sent!'});
     }).catch(err => {
       return res.status(400).json({msg: 'Error finding user', error: err});
@@ -390,6 +390,16 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
     }).then(updatedUser => res.status(200).json(updatedUser))
       .catch(error => res.status(400).json({msg: 'Error updating user', error: error})))
     .catch((error) => res.status(400).json({msg: 'Error finding user', error: error}));
+});
+
+router.post('/support', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  const {email, name, message} = req.body;
+  try {
+    await emailController.sendSupport(email, name, message);
+    res.status(200).json({msg: 'Support contacted.'})
+  } catch (error) {
+    res.stats(400).json({msg: 'Error contacting support.', error: error})
+  }
 });
 
 
