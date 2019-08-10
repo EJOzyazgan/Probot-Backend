@@ -2,6 +2,7 @@
 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const moment = require('moment');
 
 module.exports = (sequalize, DataTypes) => {
   const User = sequalize.define('User', {
@@ -24,6 +25,16 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: ''
+    },
+    gender: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: ''
+    },
+    dob: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: moment(),
     },
     isVerified: {
       type: DataTypes.BOOLEAN,
