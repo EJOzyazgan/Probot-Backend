@@ -85,8 +85,19 @@ router.get('/top-players', passport.authenticate('jwt', {session: false}), async
     limit: 100,
   }).then(topPlayers => res.status(200).send(topPlayers))
     .catch(err => {
-      console.log(err);
       res.status(400).json({msg: 'Error getting top players', error: err});
+    });
+});
+
+router.get('/user-standing', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  User.findOne({
+    where: {
+      id: req.user.dataValues.id,
+    },
+    attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
+  }).then(user => res.status(200).send(user))
+    .catch(err => {
+      res.status(400).json({msg: 'Error getting user standing', error: err});
     });
 });
 
