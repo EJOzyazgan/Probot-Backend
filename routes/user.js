@@ -118,12 +118,12 @@ router.get('/validate/token/:token', async (req, res) => {
   });
 });
 
-router.get('/validate/reset-password/:token', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/validate/reset-password/', passport.authenticate('jwt', {session: false}), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id
     },
-    attributes: {exclude: ['password']}
+    attributes: ['id']
   }).then((user) => {
     if (!user) {
       return res.status(401).json({msg: 'Valid user not found'});
@@ -235,7 +235,7 @@ router.post('/login', async (req, res, next) => {
         msg: 'Authentication failed. User not found.'
       });
     } else if (!user.isVerified) {
-      return res.status(401).send({
+      return res.status(400).send({
         msg: 'Please verify your email.'
       });
     }
