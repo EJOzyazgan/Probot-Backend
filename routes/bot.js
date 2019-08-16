@@ -109,10 +109,11 @@ router.post('/get/data', passport.authenticate('jwt', {session: false}), async (
       },
     },
     attributes: {
-      exclude: ['id', 'tournamentId', 'playerId', 'updatedAt']
+      exclude: ['id', 'tournamentId', 'playerId', 'updatedAt', 'gameId', 'handId', 'sb',]
     }
   }).then(updates => {
-    return res.status(200).send(updates);
+
+    return res.status(200).send(cleanHistory(req.body.botId, updates));
   }).catch(err => {
     return res.status(400).json({msg: 'Error getting data', error: err});
   });
@@ -139,5 +140,26 @@ router.post('/get/data', passport.authenticate('jwt', {session: false}), async (
 //         res.status(200).send("Bots Tournaments Cleared");
 //     });
 // });
+
+function cleanHistory(id, history) {
+  let cleanHistory = history;
+  for (let update of cleanHistory) {
+    if (Array.isArray(update.players))
+      for (let player of update.players) {
+        if (player.id !== id) {
+          delete player.cards;
+          delete player.name;
+        }
+        delete player.id;
+        delete player.totalWinnings;
+        delete player.willLeave;
+        delete player.willJoin;
+        delete player.bestCombination;
+        delete player.bestCombinationData;
+        delete player.hasDB;
+      }
+  }
+  return cleanHistory;
+}
 
 module.exports = router;

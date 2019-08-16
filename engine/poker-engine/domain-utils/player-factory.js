@@ -354,8 +354,16 @@ function cleanHistory(id, history) {
   for (let update of cleanHistory) {
     if (Array.isArray(update.players))
       for (let player of update.players) {
-        if (player.id !== id)
-          player.cards = [];
+        if (player.id !== id) {
+          delete player.cards;
+        }
+        delete player.id;
+        delete player.totalWinnings;
+        delete player.willLeave;
+        delete player.willJoin;
+        delete player.bestCombination;
+        delete player.bestCombinationData;
+        delete player.hasDB;
       }
   }
   return cleanHistory;
