@@ -8,6 +8,7 @@ const getCombinations = require('poker-combinations');
 
 
 const playerStatus = require('../domain/player-status');
+const tournamentStatus = require('../domain/tournament-status');
 
 const splitPot = require('./split-pot');
 
@@ -303,8 +304,20 @@ const actions = {
       request.post(`${this.serviceUrl}bet`, requestSettings, (err, response, playerBetAmount) => {
         if (err) {
           logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err.message, {tag: gs.handUniqueId});
+          if (gs.tableType === 'sandbox') {
+            engine.emit('sandbox:update', Object.assign({},
+              {
+                id: gs.mainPlayer.id,
+                botConnected: false,
+                gameCompleted: false,
+                botMessage: 'Please make sure bot url is correct'
+              }));
+            gs.tournamentStatus = tournamentStatus.stop;
+          }
           return void resolve(0);
         }
+        engine.emit('sandbox:update', Object.assign({}, {id: gs.mainPlayer.id, botConnected: true}));
+        gs.tournamentStatus = tournamentStatus.stop;
         logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerBetAmount, {tag: gs.handUniqueId});
         resolve(sanitizeAmount(playerBetAmount));
       });

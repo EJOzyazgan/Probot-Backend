@@ -9,8 +9,8 @@ const Bot = models.Bot;
 const Metric = models.Metric;
 
 module.exports = {
-  start: (table, bots) => {
-    engine.start(table, bots);
+  start: (table, bots, mainBot) => {
+    engine.start(table, bots, mainBot);
   },
 
   join: (id, bots) => {
@@ -19,7 +19,7 @@ module.exports = {
 
   end: (id) => {
     engine.end(id);
-  }
+  },
 };
 
 engine.on('tournament:aborted', () => {
@@ -44,6 +44,10 @@ engine.on('gamestate:update-user', (data) => {
 
 engine.on('gamestate:create-metric', (data) => {
   createMetric(data);
+});
+
+engine.on('sandbox:update', data => {
+  app.io.sockets.in(`${data.id}-sandbox`).emit('sandboxUpdate', data);
 });
 
 engine.on('gamestate:updated', (data, done) => {

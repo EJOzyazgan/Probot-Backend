@@ -80,6 +80,9 @@ router.get('/user-analytics', passport.authenticate('jwt',  {session: false}), (
 
 router.get('/top-players', passport.authenticate('jwt', {session: false}), async (req, res) => {
   User.findAll({
+    where: {
+      isAdmin: false,
+    },
     order: [['rank', 'ASC']],
     attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
     limit: 100,
