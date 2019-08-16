@@ -35,17 +35,18 @@ router.post('/start/sandbox', passport.authenticate('jwt', {session: false}), as
   Table.findOrCreate({
     where: {
       tableType: 'sandbox',
-      active: false,
+      isActive: false,
       'config.MAX_GAMES': 1
     }
   }).then(async ([table, created]) => {
     Bot.findAll({
       where: {
-        isSandboxBot: true
-      }
+        botType: 'sandbox',
+      },
+      limit: 4,
     }).then(bots => {
-      bots.push(req.body.bot);
-      engine.start(table, bots);
+      bots.push(req.body);
+      engine.start(table, bots, req.body);
       return res.status(200).json({msg: 'Sandbox Table Started'});
     }).catch(err => {
       return res.status(400).json({msg: 'Error finding bots', error: err});

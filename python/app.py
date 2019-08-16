@@ -17,7 +17,7 @@ app = Flask(__name__)
 def get_bot():
     player = request.json['state']['players'][request.json['state']['me']]
 
-    if player['id'] == 9:
+    if player['id'] == 22:
         # with open("ariel_data.txt", "a+") as outfile:
         #     json.dump(request.json, outfile)
         #
@@ -25,7 +25,7 @@ def get_bot():
         # f.write(',')
         # f.close()
         return str(bot_methods.parzival(request.json))
-    elif player['id'] == 10:
+    elif player['id'] == 21:
         # with open("bender_data.txt", "a+") as outfile:
         #     json.dump(request.json, outfile)
         #
@@ -33,7 +33,7 @@ def get_bot():
         # f.write(',')
         # f.close()
         return str(bot_methods.one_hit_wonder(request.json))
-    elif player['id'] == 11:
+    elif player['id'] == 24:
         # with open("marvin_data.txt", "a+") as outfile:
         #     json.dump(request.json, outfile)
         #
