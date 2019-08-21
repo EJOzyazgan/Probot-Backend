@@ -7,7 +7,7 @@ const startTime = moment().subtract(1, 'year');
 const endTime = moment();
 
 const metricType = process.argv[2];
-const botId = process.argv[3];
+const botId = parseInt(process.argv[3]);
 
 const userType = [constants.HAND_PLAYED, constants.HAND_WON, constants.TOTAL_WINNINGS];
 const adminType = [constants.PLATFORM_HAND_PLAYED, constants.REFERRAL_RATE,
@@ -19,22 +19,26 @@ if (metricType && metricType === 'admin') {
   types = adminType;
 }
 
-while (startTime.diff(endTime) < 0) {
-  for (let i = 0; i < 3; i++) {
-    let data = {
-      metricType: types[i],
-      botId: botId ? botId : null,
-      createdAt: startTime.format()
-    };
+createMetrics();
 
-    if (i < 2) {
-      data.value = Math.floor((Math.random() * 100) + 1);
-    } else {
-      data.value = Math.floor((Math.random() * 200) - 100);
+async function createMetrics () {
+  while (startTime.diff(endTime) < 0) {
+    for (let i = 0; i < 3; i++) {
+      let data = {
+        metricType: types[i],
+        botId: botId,
+        createdAt: startTime.format()
+      };
+  
+      if (i < 2) {
+        data.value = Math.floor((Math.random() * 100) + 1);
+      } else {
+        data.value = Math.floor((Math.random() * 200) - 100);
+      }
+  
+      await Metric.create(data);
     }
-
-    Metric.create(data);
+  
+    startTime.add(15, 'minutes');
   }
-
-  startTime.add(15, 'minutes');
 }
