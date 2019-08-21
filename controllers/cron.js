@@ -3,6 +3,8 @@ const Op = require('sequelize').Op;
 const models = require('../models');
 const moment = require('moment');
 const User = models.User;
+const Table = models.Table;
+const Bot = models.Bot;
 const Metric = models.Metric;
 const constants = require('../config/constants');
 
@@ -93,10 +95,35 @@ const recordUserMetrics = new CronJob('00 00 12,00 * * *', function () {
   });
 }, null, true, 'America/Los_Angeles');
 
+const recordUsageMetrics = new CronJob('0 */1 * * * *', function () {
+  Table.findAll({
+    where: {
+      isActive: true,
+    }
+  }).then(tables => {
+    Metric.create({
+      metricType: constants.ACTIVE_TABLES,
+      value: tables.length,
+    });
+  });
+
+  Bot.findAll({
+    where: {
+      isActive: true,
+    }
+  }).then(bots => {
+    Metric.create({
+      metricType: constants.ACTIVE_BOTS,
+      value: bots.length,
+    });
+  })
+}, null, true, 'America/Los_Angeles');
+
 const startAll = () => {
   rankUsers.start();
   topOffChips.start();
   recordUserMetrics.start();
+  recordUsageMetrics.start();
 };
 
 startAll();
