@@ -13,7 +13,7 @@ const contants = require('../config/constants');
 router.post('/get/metric', passport.authenticate('jwt', {session: false}), (req, res, next) => {
   Metric.findAll({
     where: {
-      botId: req.body.botId,
+      botId: req.body.botId ? req.body.botId : null,
       createdAt: {
         [Op.gte]: moment().subtract(1, req.body.period).format(),
         [Op.lte]: moment().format()
