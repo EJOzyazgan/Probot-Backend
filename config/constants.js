@@ -5,5 +5,7 @@ module.exports = {
   PLATFORM_HAND_PLAYED: 'platformHandPlayed',
   REFERRAL_RATE: 'referralRate',
   REFERRAL_ACTIVATION_RATE: 'referralActivationRate',
-  ACTIVATION_RATE: 'activationRate'
+  ACTIVATION_RATE: 'activationRate',
+  ACTIVE_BOTS: 'activeBots',
+  ACTIVE_TABLES: 'activeTables',
 };
