@@ -39,6 +39,7 @@ exports = module.exports = function* dealer(gs) {
     // break here until the tournament is resumed
     if (gs.tournamentStatus === gameStatus.pause) {
       logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
+      engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
       yield waitResume();
     }
 
@@ -66,14 +67,14 @@ exports = module.exports = function* dealer(gs) {
       // on the basis of their rank...
       // then eventually a new game starts.
 
-      const playerCount = gs.gameChart.unshift(activePlayers[0].name);
-      const points = config.AWARDS[playerCount - 2];
+      // const playerCount = gs.gameChart.unshift(activePlayers[0].name);
+      // const points = config.AWARDS[playerCount - 2];
 
-      const finalGameChart = gs.gameChart.map((playerName, i) => ({name: playerName, pts: points[i]}));
+      // const finalGameChart = gs.gameChart.map((playerName, i) => ({name: playerName, pts: points[i]}));
 
-      logger.info('Final ranks for game %d: %s', gs.gameProgressiveId, getRankingLogMessage(finalGameChart), {tag: gs.handUniqueId})
+      // logger.info('Final ranks for game %d: %s', gs.gameProgressiveId, getRankingLogMessage(finalGameChart), {tag: gs.handUniqueId})
 
-      yield save({type: 'points', tournamentId: gs.tournamentId, gameId: gs.gameProgressiveId, rank: finalGameChart});
+      // yield save({type: 'points', tournamentId: gs.tournamentId, gameId: gs.gameProgressiveId, rank: finalGameChart});
 
 
       // restore players' initial conditions

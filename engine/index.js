@@ -69,6 +69,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         gs.tournamentStatus = tournamentStatus.pause;
       } else {
         gs.tournamentStatus = tournamentStatus.play;
+        this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
       }
 
       this[tournaments_].set(tournament.id, gs);
@@ -82,8 +83,12 @@ const gamestate = Object.create(EventEmitter.prototype, {
           this[tournaments_].delete(tournament.id);
           if (gs.tableType === 'sandbox') {
             this.emit('sandbox:update', Object.assign({}, {id: gs.mainPlayer.id, gameCompleted: true}));
-            gs.tournamentStatus = tournamentStatus.stop;
+            this.emit('gamestate:update-bot', Object.assign({}, {id: gs.mainPlayer.id, isActive: false}));
           }
+          for (let player of gs.players) {
+            this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: false}));
+          }
+          this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: 0}));
           return this.emit('tournament:completed', {tournamentId: tournament.id});
         }.bind(this))
         .catch(function (err) {
@@ -139,6 +144,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return;
 
       gs.tournamentStatus = tournamentStatus.play;
+      this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
     }
   },
 
@@ -155,6 +161,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         gs.tournamentStatus = tournamentStatus.pause;
       } else {
         gs.tournamentStatus = tournamentStatus.play;
+        engine.emit('gamestate:update-table', Object.assign({}, {id: tournamentId, numPlayers: gs.players.length}));
       }
     }
   },

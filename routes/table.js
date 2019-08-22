@@ -44,11 +44,19 @@ router.post('/start/sandbox', passport.authenticate('jwt', {session: false}), as
         botType: 'sandbox',
       },
       limit: 4,
-    }).then(bots => {
+    }).then(async bots => {
       bots.push(req.body);
+      req.body.isActive = true;
+      await Bot.update(req.body, {
+        where: {
+          id: req.body.id,
+        },
+      });
       engine.start(table, bots, req.body);
+    
       return res.status(200).json({msg: 'Sandbox Table Started'});
     }).catch(err => {
+      console.log(err);
       return res.status(400).json({msg: 'Error finding bots', error: err});
     });
   }).catch(err => {
@@ -58,17 +66,6 @@ router.post('/start/sandbox', passport.authenticate('jwt', {session: false}), as
 
 router.patch('/update', passport.authenticate('jwt', {session: false}), async (req, res) => {
   let json = await updateTable(req.body);
-  // let json = await Table.update(req.body, {
-  //   where: {
-  //     id: req.body.id
-  //   },
-  //   returning: true
-  // }).then(([rowsUpdate, [updatedTable]]) => {
-  //   return {success: true, obj: updatedTable};
-  // }).catch((e) => {
-  //   return {success: false, obj: e};
-  // });
-
   return res.status(200).json(json);
 });
 
@@ -90,7 +87,7 @@ router.post('/join', passport.authenticate('jwt', {session: false}), async (req,
         if (table.numPlayers === i) {
           joined = true;
           table.numPlayers++;
-          table.active = true;
+          table.isActive = true;
           update = await updateTable(table.dataValues);
           if (update.success) {
             engine.join(table.id, [req.body.bot]);

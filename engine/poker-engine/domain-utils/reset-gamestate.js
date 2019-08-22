@@ -66,5 +66,6 @@ exports = module.exports = async function resetGamestate(gs) {
     gs.tournamentStatus = tournamentStatus.pause;
   } else {
     gs.tournamentStatus = tournamentStatus.play;
+    engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
   }
 };

@@ -62,7 +62,7 @@ let saveUpdates = (data, done) => {
   // console.log(data);
   Update.create(data)
     .then((update) => {
-      app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', {data: update});
+      app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', { data: update });
       done();
     })
     .catch((error) => {
@@ -75,7 +75,7 @@ let saveUpdates = (data, done) => {
 let saveGame = (data, done) => {
   Game.create(data)
     .then((game) => {
-      app.io.sockets.in(data.tournamentId).emit('gameOver', {data: game});
+      app.io.sockets.in(data.tournamentId).emit('gameOver', { data: game });
       done();
     })
     .catch((error) => {
@@ -88,16 +88,16 @@ let saveGame = (data, done) => {
 let updateTable = (data) => {
   Table.update({
     numPlayers: data.numPlayers,
-    active: data.numPlayers > 1
+    isActive: data.numPlayers > 1
   }, {
-    where: {
-      id: data.id
-    }
-  }).then(() => {
+      where: {
+        id: data.id
+      }
+    }).then(() => {
 
-  }).catch((err) => {
-    console.log(err);
-  });
+    }).catch((err) => {
+      console.log(err);
+    });
 };
 
 let updateUser = (data) => {
@@ -114,14 +114,14 @@ let updateUser = (data) => {
       chips: user.chips,
       totalWinnings: user.totalWinnings
     }, {
-      where: {
-        id: user.id
-      }
-    }).then(() => {
+        where: {
+          id: user.id
+        }
+      }).then(() => {
 
-    }).catch((err) => {
-      console.log(err);
-    });
+      }).catch((err) => {
+        console.log(err);
+      });
   }).catch((err) => {
     console.log(err);
   });
@@ -132,27 +132,30 @@ let updateBot = (data) => {
     where: {
       id: data.id
     }
-  }).then((bot) => {
+  }).then(bot => {
     if (data.handsPlayed)
       bot.handsPlayed += data.handsPlayed;
     if (data.handsWon)
       bot.handsWon += data.handsWon;
     if (data.totalWinnings)
       bot.totalWinnings = data.totalWinnings;
+    if (data.isActive !== null && data.isActive !== undefined)
+      bot.isActive = data.isActive;
 
     Bot.update({
       handsPlayed: bot.handsPlayed,
       handsWon: bot.handsWon,
-      totalWinnings: bot.totalWinnings
+      totalWinnings: bot.totalWinnings,
+      isActive: bot.isActive,
     }, {
-      where: {
-        id: bot.id
-      }
-    }).then(() => {
+        where: {
+          id: bot.id
+        }
+      }).then(() => {
 
-    }).catch((err) => {
-      console.log(err);
-    });
+      }).catch((err) => {
+        console.log(err);
+      });
   }).catch((err) => {
     console.log(err);
   });

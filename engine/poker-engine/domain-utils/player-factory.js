@@ -8,7 +8,7 @@ const getCombinations = require('poker-combinations');
 
 
 const playerStatus = require('../domain/player-status');
-const tournamentStatus = require('../domain/tournament-status');
+const gameStatus = require('../domain/tournament-status');
 
 const splitPot = require('./split-pot');
 
@@ -83,7 +83,7 @@ const actions = {
     if (this.willJoin) {
       this.status = playerStatus.join;
 
-      logger.log('info', '%s (%s) waiting to join.', this.name, this.id, {tag: gs.handUniqueId});
+      logger.log('info', '%s (%s) waiting to join.', this.name, this.id, { tag: gs.handUniqueId });
       return Promise.resolve();
     }
 
@@ -141,7 +141,7 @@ const actions = {
       }
     }
 
-    logger.log('debug', '%s (%s) has bet %d.', this.name, this.id, betAmount, {tag: gs.handUniqueId});
+    logger.log('debug', '%s (%s) has bet %d.', this.name, this.id, betAmount, { tag: gs.handUniqueId });
 
     this[hasTalked_] = true;
     this[update_](gs, betAmount);
@@ -172,7 +172,7 @@ const actions = {
   fold(gs) {
     this.status = playerStatus.folded;
 
-    logger.log('debug', '%s (%s) has folded.', this.name, this.id, {tag: gs.handUniqueId});
+    logger.log('debug', '%s (%s) has folded.', this.name, this.id, { tag: gs.handUniqueId });
     return save({
       type: 'status',
       handId: gs.handUniqueId,
@@ -186,7 +186,7 @@ const actions = {
   leave(gs) {
     this.willLeave = true;
 
-    logger.log('info', '%s (%s) will leave.', this.name, this.id, {tag: gs.handUniqueId});
+    logger.log('info', '%s (%s) will leave.', this.name, this.id, { tag: gs.handUniqueId });
   },
 
 
@@ -293,7 +293,7 @@ const actions = {
     history = cleanHistory(gs.players[state.me].id, history);
 
     const requestSettings = {
-      body: {state: state, history: history},
+      body: { state: state, history: history },
       json: true,
       followAllRedirects: true,
       maxRedirects: 1,
@@ -303,22 +303,23 @@ const actions = {
     return new Promise((resolve, reject) => {
       request.post(`${this.serviceUrl}bet`, requestSettings, (err, response, playerBetAmount) => {
         if (err) {
-          logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err.message, {tag: gs.handUniqueId});
+          logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err.message, { tag: gs.handUniqueId });
           if (gs.tableType === 'sandbox') {
             engine.emit('sandbox:update', Object.assign({},
               {
-                id: gs.mainPlayer.id,
+                id: this.id,
                 botConnected: false,
                 gameCompleted: false,
                 botMessage: 'Please make sure bot url is correct'
               }));
-            gs.tournamentStatus = tournamentStatus.stop;
+              engine.emit('gamestate:update-bot', Object.assign({}, {id: this.id, isActive: false}));
+            engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
+            gs.tournamentStatus = gameStatus.stop;
           }
           return void resolve(0);
         }
-        engine.emit('sandbox:update', Object.assign({}, {id: gs.mainPlayer.id, botConnected: true}));
-        gs.tournamentStatus = tournamentStatus.stop;
-        logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerBetAmount, {tag: gs.handUniqueId});
+        engine.emit('sandbox:update', Object.assign({}, { id: this.id, botConnected: true }));
+        logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerBetAmount, { tag: gs.handUniqueId });
         resolve(sanitizeAmount(playerBetAmount));
       });
     });
@@ -446,7 +447,7 @@ exports = module.exports = function factory(obj, gs) {
   const player = Object.create(actions);
 
   ['id', 'name', 'serviceUrl', 'userId']
-    .forEach(prop => Object.defineProperty(player, prop, {value: obj[prop]}));
+    .forEach(prop => Object.defineProperty(player, prop, { value: obj[prop] }));
 
   // status of the player
   player.status = playerStatus.active;
@@ -470,8 +471,8 @@ exports = module.exports = function factory(obj, gs) {
   player.totalWinnings = obj.totalWinnings - player.chips;
 
   if (gs.tableType !== 'sandbox') {
-    engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: (player.chips * -1)}));
-    engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
+    engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: (player.chips * -1) }));
+    engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: player.totalWinnings }));
   }
 
   logger.info('%s (%s), registered as player.', player.name, player.id);
