@@ -36,7 +36,7 @@ exports = module.exports = function* teardown(gs) {
 
   if (gs.tableType !== 'sandbox') {
     gs.winners.forEach(player => {
-      engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, handsWon: 1 }));
+      engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, handsWon: 1, totalWinnings: (player.totalWinnings - player.chips) }));
       engine.emit('gamestate:create-metric', Object.assign({}, {
         metricType: constants.HAND_WON,
         value: 1,

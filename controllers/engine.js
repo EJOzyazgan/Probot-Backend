@@ -112,7 +112,6 @@ let updateUser = (data) => {
 
     User.update({
       chips: user.chips,
-      totalWinnings: user.totalWinnings
     }, {
         where: {
           id: user.id

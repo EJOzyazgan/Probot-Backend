@@ -446,7 +446,7 @@ exports = module.exports = function factory(obj, gs) {
 
   const player = Object.create(actions);
 
-  ['id', 'name', 'serviceUrl', 'userId']
+  ['id', 'name', 'serviceUrl', 'userId', 'totalWinnings']
     .forEach(prop => Object.defineProperty(player, prop, { value: obj[prop] }));
 
   // status of the player
@@ -468,11 +468,9 @@ exports = module.exports = function factory(obj, gs) {
   // in each "betting session" of the current hand.
   player.chipsBet = 0;
 
-  player.totalWinnings = obj.totalWinnings - player.chips;
-
   if (gs.tableType !== 'sandbox') {
     engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: (player.chips * -1) }));
-    engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: player.totalWinnings }));
+    engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: (player.totalWinnings - player.chips) }));
   }
 
   logger.info('%s (%s), registered as player.', player.name, player.id);

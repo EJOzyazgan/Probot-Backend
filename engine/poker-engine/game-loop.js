@@ -48,7 +48,7 @@ exports = module.exports = function* dealer(gs) {
 
     if (gs.tableType !== 'sandbox') {
       gs.players.forEach(player => {
-        engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1}));
+        engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1, totalWinnings: (player.totalWinnings - player.chips)}));
         engine.emit('gamestate:create-metric', Object.assign({}, {
           metricType: constants.HAND_PLAYED,
           value: 1,
