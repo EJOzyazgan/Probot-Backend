@@ -22,7 +22,7 @@ module.exports = (sequalize, DataTypes) => {
 
         // time (expressed in ms) to wait after an hand ends,
         // before a new one can start
-        HANDWAIT: 1000,
+        HANDWAIT: 100,
 
         // time (expressed in ms) to wait after a bet,
         // before a new one can start
@@ -57,7 +57,7 @@ module.exports = (sequalize, DataTypes) => {
         // if enabled, antes should be started being payed
         // when 10% of bigblind amount is greater equal than
         // 10% of the initial buy-in.
-        ENABLE_ANTE: true,
+        ENABLE_ANTE: false,
 
         // points the players receive on the basis of their placement in a game;
         // the value of a placement changes in function of the number of players

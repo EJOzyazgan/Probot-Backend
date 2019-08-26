@@ -63,27 +63,35 @@ const gamestate = Object.create(EventEmitter.prototype, {
         }
       });
 
-
       if (gs.players.length < 2) {
         logger.info('Tournament %s waiting for more players players.', tournament.id, {tag: gs.handUniqueId});
         gs.tournamentStatus = tournamentStatus.pause;
+        this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
+        this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
+        for (let player of gs.players) {
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips)}));
+        }
       }
 
       this[tournaments_].set(tournament.id, gs);
 
       logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), {tag: gs.handUniqueId});
 
-      // start the game
+      //start the game
       return void run(gameloop, gs)
         .then(function () {
           logger.info('Tournament %s is just finished.', tournament.id, {tag: gs.handUniqueId});
           this[tournaments_].delete(tournament.id);
           if (gs.tableType === 'sandbox') {
             this.emit('sandbox:update', Object.assign({}, {id: gs.mainPlayer.id, gameCompleted: true}));
-            gs.tournamentStatus = tournamentStatus.stop;
+            this.emit('gamestate:update-bot', Object.assign({}, {id: gs.mainPlayer.id, isActive: false}));
           }
+          for (let player of gs.players) {
+            this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: false}));
+          }
+          this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: 0}));
           return this.emit('tournament:completed', {tournamentId: tournament.id});
         }.bind(this))
         .catch(function (err) {
@@ -128,7 +136,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
       // in case the tournament is starting for the first time
       // we've to setup the tournament.
 
-      if (gs == null)
+      if (!gs)
         return void this[setup_](tournament, players, gameId, mainPlayer);
 
       // b)
@@ -139,6 +147,11 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return;
 
       gs.tournamentStatus = tournamentStatus.play;
+      this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
+
+      for (let player of gs.players) {
+        this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips)}));
+      }
     }
   },
 
@@ -153,8 +166,14 @@ const gamestate = Object.create(EventEmitter.prototype, {
       if (gs.players.length < 2) {
         logger.info('Tournament %s waiting for more players players.', tournamentId, {tag: gs.handUniqueId});
         gs.tournamentStatus = tournamentStatus.pause;
+        this.emit('gamestate:update-table', Object.assign({}, {id: tournamentId, numPlayers: gs.players.length}));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
+        this.emit('gamestate:update-table', Object.assign({}, {id: tournamentId, numPlayers: gs.players.length}));
+
+        for (let player of gs.players) {
+          this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips)}));
+        }
       }
     }
   },
@@ -212,7 +231,6 @@ const gamestate = Object.create(EventEmitter.prototype, {
       gs.tournamentStatus = tournamentStatus.latest;
     }
   }
-
 });
 
 // gamestate[tournaments_] contains the game information
