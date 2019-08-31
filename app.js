@@ -9,7 +9,7 @@ const models = require('./models');
 
 const routeIndex = require('./routes/index');
 
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 3000;
 
 const app = express();
 
@@ -49,6 +49,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
 app.use('/api', routeIndex);
+
+app.get('/', (req, res) => {
+  res.status(200).send();
+})
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
