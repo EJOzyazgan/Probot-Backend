@@ -32,7 +32,6 @@
 npm-debug.log
 testem.log
 /typings
-.env
 
 # e2e
 /e2e/*.js
@@ -44,9 +43,6 @@ Thumbs.db
 
 # config file
 /package-lock.json
-
-private.key
-public.key
 
 python/
 venv/
