@@ -48,6 +48,4 @@ python/
 venv/
 demo-players/
 
-.env
-
 probot.zip
