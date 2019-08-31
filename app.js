@@ -15,6 +15,9 @@ const app = express();
 
 const http = require('http').Server(app);
 const io = require('socket.io')(http).listen(3030);
+const redis = require('socket.io-redis');
+
+io.adapter(redis({ host: 'probot-redis.25f2rb.0001.usw2.cache.amazonaws.com', port: 6379 }));
 
 // const WebSocket = require('ws');
 // const wss = new WebSocket.Server({ port: 8080 });
