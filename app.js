@@ -9,7 +9,7 @@ const models = require('./models');
 
 const routeIndex = require('./routes/index');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8081;
 
 const app = express();
 
