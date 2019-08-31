@@ -14,7 +14,10 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http).listen(3030);
+
+// const WebSocket = require('ws');
+// const wss = new WebSocket.Server({ port: 8080 });
 
 require('./config/passport');
 
