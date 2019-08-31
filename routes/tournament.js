@@ -2,7 +2,6 @@ const engine = require('../controllers/engine');
 const {Bot} = require('../models/bot');
 const {Bracket} = require('../models/bracket');
 const {Tournament} = require('../models/tournament');
-const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const app = require('../app');

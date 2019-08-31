@@ -16,7 +16,3 @@ module.exports = (sequalize, DataTypes) => {
 
     return Game;
 };
-
-// let Game = mongoose.model('Game', GameSchema);
-//
-// module.exports = {Game};

@@ -18,7 +18,4 @@ module.exports = (sequalize, DataTypes) => {
 
     return Bracket
 };
-    //
-    // let Bracket = mongoose.model('Bracket', BracketSchema);
-    //
-    // module.exports = {Bracket};
+

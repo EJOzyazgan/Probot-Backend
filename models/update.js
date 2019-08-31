@@ -49,7 +49,4 @@ module.exports = (sequalize, DataTypes) => {
 
     return Update;
 };
-//
-// let Update = mongoose.model('Update', UpdateSchema);
-//
-// module.exports = {Update};
+

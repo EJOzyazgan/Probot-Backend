@@ -1,6 +1,5 @@
 'use strict';
 
-const mongoose = require('mongoose');
 const ts = require('../config/tournamet-state');
 
 module.exports = (sequalize, DataTypes) => {
@@ -22,6 +21,3 @@ module.exports = (sequalize, DataTypes) => {
     return Tournament;
 };
 
-// let Tournament = mongoose.model('Tournament', TournamentSchema);
-//
-// module.exports = {Tournament};
