@@ -8,7 +8,7 @@ from .esiu_goodluck_exe import goodluck_exe
 from .nisprute_meep import meep
 from .qge_DummyBot import dummy_bot
 from .y2miao_potential import potential
-from.scl002_all_in_every_time import all_in
+from .scl002_all_in_every_time import all_in
 
 app = Flask(__name__)
 

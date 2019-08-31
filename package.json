@@ -1,17 +1,19 @@
 {
-  "name": "acecode-backend",
-  "version": "0.0.0",
+  "name": "probot-backend",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node app.js",
+    "start": "pm2-runtime start ecosystem.config.js --env production",
     "start:dev": "nodemon app.js"
+  },
+  "engine": {
+    "node": "10.16.0"
   },
   "dependencies": {
     "@types/socket.io": "^2.1.2",
     "bcrypt": "^3.0.3",
     "body-parser": "^1.18.3",
     "chalk": "^2.4.2",
-    "connect-mongo": "^2.0.3",
     "cookie-parser": "~1.4.3",
     "cron": "^1.7.1",
     "crypto": "^1.0.1",
@@ -26,10 +28,8 @@
     "jsonwebtoken": "^8.4.0",
     "jszip": "^3.2.2",
     "knuth-shuffle": "^1.0.8",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.15",
     "moment": "^2.24.0",
-    "mongodb": "^3.1.10",
-    "mongoose": "^5.4.1",
     "morgan": "~1.9.0",
     "nodemailer": "^6.2.1",
     "passport": "^0.4.0",
@@ -37,14 +37,15 @@
     "passport-local": "^1.0.0",
     "pg": "^7.11.0",
     "pg-hstore": "^2.3.2",
+    "pm2": "^3.5.1",
     "poker-combinations": "^1.1.0",
     "poker-deck": "^1.0.0",
     "poker-holdem-engine": "^2.0.5",
     "poker-rank": "^1.1.0",
     "poker-ranking": "^1.1.2",
-    "pug": "2.0.0-beta11",
+    "pug": "^2.0.4",
     "request": "^2.88.0",
-    "sequelize": "^5.8.7",
+    "sequelize": "^5.17.1",
     "sleep-promise": "^8.0.1",
     "socket.io": "^2.2.0",
     "validator": "^10.10.0"
