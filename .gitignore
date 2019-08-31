@@ -47,5 +47,6 @@ Thumbs.db
 python/
 venv/
 demo-players/
+.env
 
 probot.zip
