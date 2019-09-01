@@ -66,7 +66,7 @@ module.exports = (sequalize, DataTypes) => {
     },
     chips: {
       type: DataTypes.FLOAT,
-      defaultValue: 1000
+      defaultValue: parseInt(process.env.STARTING_CHIPS)
     },
     rankClass: {
       type: DataTypes.STRING,

@@ -5,12 +5,12 @@ const models = require('../models');
 const Metric = models.Metric;
 const Bot = models.Bot;
 const User = models.User;
-const Table  = models.Table;
+const Table = models.Table;
 const Op = require('sequelize').Op;
 const moment = require('moment');
 const contants = require('../config/constants');
 
-router.post('/get/metric', passport.authenticate('jwt', {session: false}), (req, res, next) => {
+router.post('/get/metric', passport.authenticate('jwt', { session: false }), (req, res, next) => {
   Metric.findAll({
     where: {
       botId: req.body.botId ? req.body.botId : null,
@@ -25,11 +25,11 @@ router.post('/get/metric', passport.authenticate('jwt', {session: false}), (req,
     res.status(200).send(getFormattedMetrics(metrics, req.body.period));
   }).catch(err => {
     console.log(err);
-    res.status(400).json({msg: 'Error Retrieving Metrics', error: err});
+    res.status(400).json({ msg: 'Error Retrieving Metrics', error: err });
   })
 });
 
-router.get('/platform-analytics', passport.authenticate('jwt',  {session: false}), async (req, res) => {
+router.get('/platform-analytics', passport.authenticate('jwt', { session: false }), async (req, res) => {
   const platformAnalytics = {};
 
   await Bot.findAll({
@@ -40,7 +40,7 @@ router.get('/platform-analytics', passport.authenticate('jwt',  {session: false}
   }).then(bots => {
     platformAnalytics.activeBots = bots.length;
   }).catch(err => {
-    return res.status(400).json({msg: 'Error getting platformAnalytics bots', error: err});
+    return res.status(400).json({ msg: 'Error getting platformAnalytics bots', error: err });
   });
 
   await Table.findAll({
@@ -51,7 +51,7 @@ router.get('/platform-analytics', passport.authenticate('jwt',  {session: false}
   }).then(tables => {
     platformAnalytics.activeTables = tables.length;
   }).catch(err => {
-    return res.status(400).json({msg: 'Error getting platformAnalytics tables', error: err});
+    return res.status(400).json({ msg: 'Error getting platformAnalytics tables', error: err });
   });
 
   await Metric.findAll({
@@ -62,23 +62,23 @@ router.get('/platform-analytics', passport.authenticate('jwt',  {session: false}
   }).then(hands => {
     platformAnalytics.platformHandsPlayed = hands.length;
   }).catch(err => {
-    return res.status(400).json({msg: 'Error getting platformAnalytics hands', error: err});
+    return res.status(400).json({ msg: 'Error getting platformAnalytics hands', error: err });
   });
 
   return res.status(200).json(platformAnalytics);
 });
 
-router.get('/user-analytics', passport.authenticate('jwt',  {session: false}), (req, res) => {
+router.get('/user-analytics', passport.authenticate('jwt', { session: false }), (req, res) => {
   User.findAll({
     attributes: ['id', 'referrals', 'isVerified', 'referredBy', 'lastLoggedIn']
   }).then(users => {
     return res.status(200).json(calculateUserAnalytics(users));
   }).catch(err => {
-    return res.status(400).json({msg: 'Error getting user analytics', error: err});
+    return res.status(400).json({ msg: 'Error getting user analytics', error: err });
   });
 });
 
-router.get('/top-players', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/top-players', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findAll({
     where: {
       isAdmin: false,
@@ -86,13 +86,20 @@ router.get('/top-players', passport.authenticate('jwt', {session: false}), async
     order: [['rank', 'ASC']],
     attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
     limit: 100,
-  }).then(topPlayers => res.status(200).send(topPlayers))
+  }).then(topPlayers => {
+    if (topPlayers.length >= 99) {
+
+      res.status(200).send(topPlayers)
+    } else {
+      res.status(200).send([]);
+    }
+  })
     .catch(err => {
-      res.status(400).json({msg: 'Error getting top players', error: err});
+      res.status(400).json({ msg: 'Error getting top players', error: err });
     });
 });
 
-router.get('/user-standing', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/user-standing', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id,
@@ -100,7 +107,7 @@ router.get('/user-standing', passport.authenticate('jwt', {session: false}), asy
     attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
   }).then(user => res.status(200).send(user))
     .catch(err => {
-      res.status(400).json({msg: 'Error getting user standing', error: err});
+      res.status(400).json({ msg: 'Error getting user standing', error: err });
     });
 });
 
@@ -174,9 +181,9 @@ const formatMetrics = (metrics, period, timeFrame, blockUnit) => {
     }
 
     if (numPoints === 0)
-      formatted.push({createdAt: timeBlock.format(), value: 0});
+      formatted.push({ createdAt: timeBlock.format(), value: 0 });
     else
-      formatted.push({createdAt: timeBlock.format(), value: totalValue / numPoints});
+      formatted.push({ createdAt: timeBlock.format(), value: totalValue / numPoints });
     totalValue = 0;
     numPoints = 0;
 

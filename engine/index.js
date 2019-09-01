@@ -44,7 +44,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
       gs.handUniqueId = `${gs.pid}_${gs.tournamentId}_${gs.gameProgressiveId}-${gs.handProgressiveId}`;
 
 
-      logger.info('Setup tournament %s.', tournament.id, {tag: gs.handUniqueId});
+      logger.info('Setup tournament %s.', tournament.id, { tag: gs.handUniqueId });
 
       gs.players = players.map((p) => {
         return createPlayer(p, gs)
@@ -64,40 +64,40 @@ const gamestate = Object.create(EventEmitter.prototype, {
       });
 
       if (gs.players.length < 2) {
-        logger.info('Tournament %s waiting for more players players.', tournament.id, {tag: gs.handUniqueId});
+        logger.info('Tournament %s waiting for more players players.', tournament.id, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
-        this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
+        this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
-        this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
+        this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
         for (let player of gs.players) {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips)}));
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips) }));
         }
       }
 
       this[tournaments_].set(tournament.id, gs);
 
-      logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), {tag: gs.handUniqueId});
+      logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), { tag: gs.handUniqueId });
 
       //start the game
       return void run(gameloop, gs)
         .then(function () {
-          logger.info('Tournament %s is just finished.', tournament.id, {tag: gs.handUniqueId});
+          logger.info('Tournament %s is just finished.', tournament.id, { tag: gs.handUniqueId });
           this[tournaments_].delete(tournament.id);
           if (gs.tableType === 'sandbox') {
-            this.emit('sandbox:update', Object.assign({}, {id: gs.mainPlayer.id, gameCompleted: true}));
-            this.emit('gamestate:update-bot', Object.assign({}, {id: gs.mainPlayer.id, isActive: false}));
+            this.emit('sandbox:update', Object.assign({}, { id: gs.mainPlayer.id, gameCompleted: true }));
+            this.emit('gamestate:update-bot', Object.assign({}, { id: gs.mainPlayer.id, isActive: false }));
           }
           for (let player of gs.players) {
-            this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: false}));
+            this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false }));
           }
-          this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: 0}));
-          return this.emit('tournament:completed', {tournamentId: tournament.id});
+          this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: 0 }));
+          return this.emit('tournament:completed', { tournamentId: tournament.id });
         }.bind(this))
         .catch(function (err) {
           // an error occurred during the gameloop generator execution;
           // if the exception is not handled before... there's nothing here i can do.
-          const errorTag = {tag: gs.handUniqueId};
+          const errorTag = { tag: gs.handUniqueId };
           logger.error('An error occurred during tournament %s.', gs.tournamentId, errorTag);
           logger.error('Error: %s.\nStacktrace: %s', err.message, err.stack, errorTag);
         });
@@ -147,10 +147,14 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return;
 
       gs.tournamentStatus = tournamentStatus.play;
-      this.emit('gamestate:update-table', Object.assign({}, {id: tournament.id, numPlayers: gs.players.length}));
+      this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
 
       for (let player of gs.players) {
-        this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips)}));
+        if (gs.tableType !== 'sandbox') {
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips) }));
+        } else {
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true }));
+        }
       }
     }
   },
@@ -164,15 +168,15 @@ const gamestate = Object.create(EventEmitter.prototype, {
       }).filter(x => x != null));
 
       if (gs.players.length < 2) {
-        logger.info('Tournament %s waiting for more players players.', tournamentId, {tag: gs.handUniqueId});
+        logger.info('Tournament %s waiting for more players players.', tournamentId, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
-        this.emit('gamestate:update-table', Object.assign({}, {id: tournamentId, numPlayers: gs.players.length}));
+        this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
-        this.emit('gamestate:update-table', Object.assign({}, {id: tournamentId, numPlayers: gs.players.length}));
+        this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
 
         for (let player of gs.players) {
-          this.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips)}));
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips) }));
         }
       }
     }
@@ -199,7 +203,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
       if (gs.tournamentStatus !== tournamentStatus.play)
         return;
 
-      logger.info('Tournament %s is going to be paused.', gs.tournamentId, {tag: gs.tournamentId});
+      logger.info('Tournament %s is going to be paused.', gs.tournamentId, { tag: gs.tournamentId });
       gs.tournamentStatus = tournamentStatus.pause;
 
     }
@@ -227,7 +231,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
       if (gs.tournamentStatus !== tournamentStatus.play)
         return;
 
-      logger.info('Tournament %s is going to finish.', gs.tournamentId, {tag: gs.tournamentId});
+      logger.info('Tournament %s is going to finish.', gs.tournamentId, { tag: gs.tournamentId });
       gs.tournamentStatus = tournamentStatus.latest;
     }
   }

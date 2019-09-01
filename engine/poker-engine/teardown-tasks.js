@@ -53,10 +53,17 @@ exports = module.exports = function* teardown(gs) {
   for (let i = 0; i < activePlayers.length; i++) {
     let player = activePlayers[i];
     if (player.chips === 0) {
-      gs.players.splice(gs.players.findIndex(p => p.id === player.id));
-      logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
-      engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, isActive: false}));
-      yield save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
+      if (player.botType === 'userBot') {
+        gs.players.splice(gs.players.findIndex(p => p.id === player.id));
+        logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
+        engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false }));
+        yield save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
+      } else if (gs.tableType === 'sandbox') {
+        gs.players.splice(gs.players.findIndex(p => p.id === player.id));
+        logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
+      } else {
+        player.chips += gs.config.BUYIN;
+      }
     }
   }
 

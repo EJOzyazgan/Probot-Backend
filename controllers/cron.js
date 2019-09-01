@@ -13,7 +13,7 @@ const DAILY_TOP_OFF = 1000;
 const rankUsers = new CronJob('0 */1 * * * *', function () {
   User.findAll({
     order: [['chips', 'DESC']],
-    attributes: ['id', 'rank', 'rankClass']
+    attributes: ['id', 'rank', 'rankClass'],
   }).then(users => {
     for (let i = 0; i < users.length; i++) {
       const rank = i + 1;

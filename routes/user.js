@@ -14,7 +14,7 @@ const Op = require('sequelize').Op;
 const fs = require('fs');
 const path = require('path');
 
-const REFERRAL_REWARD = 2000;
+const REFERRAL_REWARD = parseInt(process.env.REFERRAL_REWARD);
 
 const privateKeyPath = path.join(__dirname, '../config/private.key');
 const publicKeyPath = path.join(__dirname, '../config/public.key');

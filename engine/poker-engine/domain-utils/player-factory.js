@@ -312,7 +312,7 @@ const actions = {
                 gameCompleted: false,
                 botMessage: 'Please make sure bot url is correct'
               }));
-              engine.emit('gamestate:update-bot', Object.assign({}, {id: this.id, isActive: false}));
+            engine.emit('gamestate:update-bot', Object.assign({}, { id: this.id, isActive: false }));
             engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
             gs.tournamentStatus = gameStatus.stop;
           }
@@ -456,6 +456,8 @@ exports = module.exports = function factory(obj, gs) {
 
   player.willJoin = true;
 
+  player.botType = obj.botType;
+
   // amount of chips available
   player.chips = gs.config.BUYIN;
 
@@ -468,13 +470,14 @@ exports = module.exports = function factory(obj, gs) {
   // in each "betting session" of the current hand.
   player.chipsBet = 0;
 
-  if (gs.tableType !== 'sandbox') {
+  if (gs.tableType !== 'sandbox' && player.botType === 'userBot') {
     engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: (player.chips * -1) }));
     engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: (player.totalWinnings - player.chips) }));
   }
 
   logger.info('%s (%s), registered as player.', player.name, player.id);
 
+  console.log(player);
   return player;
 
 };
