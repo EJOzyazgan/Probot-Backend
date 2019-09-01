@@ -118,8 +118,14 @@ updateTable = (table) => {
 
 openNewTable = (buyin, res, bot) => {
   return Table.create({ tableType: 'pvp', numPlayers: 1, 'config.BUYIN': buyin }).then(table => {
-    engine.start(table.dataValues, [bot]);
-    return res.status(200).json({ msg: 'Waiting for other players' });
+    Bot.findOne({
+      where: {
+        botType: 'pvp',
+      },
+    }).then(sysbot => {
+      engine.start(table.dataValues, [bot, sysbot]);
+      return res.status(200).json({ msg: 'Joined Table' });
+    })
   }).catch(err => {
     console.log(err);
     return res.status(400).json({ msg: 'Could not join table', error: err })
