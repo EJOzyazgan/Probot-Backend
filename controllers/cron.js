@@ -15,20 +15,22 @@ const rankUsers = new CronJob('0 */1 * * * *', function () {
     order: [['chips', 'DESC']],
     attributes: ['id', 'rank', 'rankClass'],
   }).then(users => {
-    for (let i = 0; i < users.length; i++) {
-      const rank = i + 1;
-      users[i].rank = rank;
+    if (users.length > 100) {
+      for (let i = 0; i < users.length; i++) {
+        const rank = i + 1;
+        users[i].rank = rank;
 
-      if (rank <= users.length * 0.1)
-        users[i].rankClass = 'Diamond';
-      else if (rank <= users.length * 0.30)
-        users[i].rankClass = 'Gold';
-      else if (rank <= users.length * 0.60)
-        users[i].rankClass = 'Silver';
-      else
-        users[i].rankClass = 'Bronze';
+        if (rank <= users.length * 0.1)
+          users[i].rankClass = 'Diamond';
+        else if (rank <= users.length * 0.30)
+          users[i].rankClass = 'Gold';
+        else if (rank <= users.length * 0.60)
+          users[i].rankClass = 'Silver';
+        else
+          users[i].rankClass = 'Bronze';
 
-      users[i].save();
+        users[i].save();
+      }
     }
   })
 }, null, true, 'America/Los_Angeles');
