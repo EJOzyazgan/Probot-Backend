@@ -148,7 +148,6 @@ function cleanHistory(id, history) {
       for (let player of update.players) {
         if (player.id !== id) {
           delete player.cards;
-          delete player.name;
         }
         delete player.id;
         delete player.totalWinnings;
@@ -156,7 +155,6 @@ function cleanHistory(id, history) {
         delete player.willJoin;
         delete player.bestCombination;
         delete player.bestCombinationData;
-        delete player.hasDB;
       }
   }
   return cleanHistory;

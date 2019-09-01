@@ -364,7 +364,6 @@ function cleanHistory(id, history) {
         delete player.willJoin;
         delete player.bestCombination;
         delete player.bestCombinationData;
-        delete player.hasDB;
       }
   }
   return cleanHistory;
