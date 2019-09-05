@@ -42,10 +42,13 @@ module.exports = (sequalize, DataTypes) => {
         MAX_GAMES: Infinity,
 
         // the amount of initial chips for each player
-        BUYIN: 100,
+        MIN_BUYIN: 100,
+        MAX_BUYIN: 400,
 
         // the progression of small blinds
         SMALL_BLINDS: [5, 10, 25, 50, 75, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000],
+
+        SMALL_BLIND: 1,
 
         // duration of a small blind value,
         // expressed in terms of "DB turns of the table"

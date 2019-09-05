@@ -62,7 +62,7 @@ exports = module.exports = function* teardown(gs) {
         gs.players.splice(gs.players.findIndex(p => p.id === player.id));
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
       } else {
-        player.chips += gs.config.BUYIN;
+        player.chips += gs.config.MAX_BUYIN;
       }
     }
   }

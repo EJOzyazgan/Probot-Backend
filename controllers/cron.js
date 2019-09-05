@@ -97,7 +97,7 @@ const recordUserMetrics = new CronJob('00 00 12,00 * * *', function () {
   });
 }, null, true, 'America/Los_Angeles');
 
-const recordUsageMetrics = new CronJob('0 */1 * * * *', function () {
+const recordUsageMetrics = new CronJob('0 */30 * * * *', function () {
   Table.findAll({
     where: {
       isActive: true,

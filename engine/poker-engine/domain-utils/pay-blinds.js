@@ -25,14 +25,14 @@ exports = module.exports = function payBlinds(gs){
   // who has to pay the small blind
   const smallBlindIndex = getNextActivePlayerIndex(gs.players, dealerButtonIndex);
 
-  gs.players[smallBlindIndex].pay(gs, gs.sb);
+  gs.players[smallBlindIndex].pay(gs, gs.config.SMALL_BLIND);
 
 
   // index of the player
   // who has to pay the big blind
   const bigBlindIndex = getNextActivePlayerIndex(gs.players, smallBlindIndex);
 
-  gs.players[bigBlindIndex].pay(gs, 2*gs.sb);
+  gs.players[bigBlindIndex].pay(gs, 2*gs.config.SMALL_BLIND);
   gs.players[bigBlindIndex][hasBB_] = true;
 
 };

@@ -41,7 +41,7 @@ def get_bot():
         # f.write(',')
         # f.close()
         return str(bot_methods.mastermind(request.json))
-    elif player['id'] == 13:
+    elif player['id'] == 29:
         # with open("r2d2_data.txt", "a+") as outfile:
         #     json.dump(request.json, outfile)
         #
@@ -49,10 +49,10 @@ def get_bot():
         # f.write(',')
         # f.close()
         return str(bot_methods.good_game(request.json))
-    elif player['id'] == "5cc2228ca960de667cfd69ae":
-        return str(robocop(request.json))
-    elif player['id'] == "5cc222a1a960de667cfd69af":
-        return str(goodluck_exe(request.json))
+    elif player['id'] == 20:
+        return str(bot_methods.RIP_bot(request.json))
+    elif player['id'] == 25:
+        return str(bot_methods.the_joker(request.json))
     elif player['id'] == "5cc222a8a960de667cfd69b0":
         return str(meep(request.json))
     elif player['id'] == "5cc222b0a960de667cfd69b1":
