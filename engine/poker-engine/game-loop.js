@@ -123,7 +123,7 @@ exports = module.exports = function* dealer(gs) {
         type: 'setup',
         handId: gs.handUniqueId,
         pot: gs.pot,
-        sb: gs.sb,
+        sb: gs.config.SMALL_BLIND,
         ante: gs.ante || 0,
         players: gs.players
       });

@@ -22,7 +22,7 @@ router.post('/get/metric', passport.authenticate('jwt', { session: false }), (re
     },
     order: [['createdAt', 'ASC']]
   }).then(metrics => {
-    res.status(200).send(getFormattedMetrics(metrics, req.body.period));
+    res.status(200).send(getFormattedMetrics(metrics, req.body.period, req.body.metricType));
   }).catch(err => {
     console.log(err);
     res.status(400).json({ msg: 'Error Retrieving Metrics', error: err });
@@ -148,18 +148,18 @@ const calculateUserAnalytics = users => {
   };
 };
 
-const getFormattedMetrics = (metrics, period) => {
+const getFormattedMetrics = (metrics, period, type) => {
   if (period === 'day')
-    return formatMetrics(metrics, period, 30, 'minutes');
+    return formatMetrics(metrics, period, 30, 'minutes', type);
   else if (period === 'week')
-    return formatMetrics(metrics, period, 3, 'hours');
+    return formatMetrics(metrics, period, 3, 'hours', type);
   else if (period === 'month')
-    return formatMetrics(metrics, period, 12, 'hours');
+    return formatMetrics(metrics, period, 12, 'hours', type);
   else if (period === 'year')
-    return formatMetrics(metrics, period, 1, 'weeks');
+    return formatMetrics(metrics, period, 1, 'weeks', type);
 };
 
-const formatMetrics = (metrics, period, timeFrame, blockUnit) => {
+const formatMetrics = (metrics, period, timeFrame, blockUnit, type) => {
   let formatted = [];
 
   let totalValue = 0;
@@ -175,15 +175,20 @@ const formatMetrics = (metrics, period, timeFrame, blockUnit) => {
         totalValue += metrics[i].value;
         numPoints++;
       } else {
-        lastIndex = i + 1;
+        lastIndex = i;;
         break;
       }
     }
 
-    if (numPoints === 0)
+    if (numPoints === 0) {
       formatted.push({ createdAt: timeBlock.format(), value: 0 });
-    else
-      formatted.push({ createdAt: timeBlock.format(), value: totalValue / numPoints });
+    } else {
+      let value = totalValue;
+      if (!type.toLowerCase().includes('hand')) {
+        value = value / numPoints;
+      }
+      formatted.push({ createdAt: timeBlock.format(), value });
+    }
     totalValue = 0;
     numPoints = 0;
 

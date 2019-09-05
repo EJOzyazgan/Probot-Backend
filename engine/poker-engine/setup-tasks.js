@@ -49,7 +49,7 @@ exports = module.exports = function setup(gs){
   // big blinds is always the double
   computeSmallBlind(gs);
 
-  logger.log('debug', 'Small Blind has been computed; its value is %d.', gs.sb, { tag: gs.handUniqueId });
+  logger.log('debug', 'Small Blind has been computed; its value is %d.', gs.config.SMALL_BLIND, { tag: gs.handUniqueId });
 
 
 

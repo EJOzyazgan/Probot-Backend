@@ -117,7 +117,7 @@ const actions = {
         // 2) check minumum raise amount,
         //    and eventually update the data about the last raise.
 
-        const minRaise = playerCallAmount + (gs.lastRaiseAmount || 2 * gs.sb);
+        const minRaise = playerCallAmount + (gs.lastRaiseAmount || 2 * gs.config.SMALL_BLIND);
 
         if (betAmount < minRaise) {
 
@@ -229,9 +229,6 @@ const actions = {
     // unique id of the current tournament
     state.tournamentId = gs.tournamentId;
 
-    // initial amount of chips available to each player
-    state.buyin = gs.config.BUYIN;
-
     // game number of the current tournament
     state.game = gs.gameProgressiveId;
 
@@ -244,12 +241,14 @@ const actions = {
 
     // value of the small blinds
     // ... big blind is always twice
-    state.sb = gs.sb;
+    state.sb = gs.config.SMALL_BLIND;
 
     // value of the pot, and eventually sidepot.
     // are updated after each bet
     state.pot = gs.pot;
     state.sidepots = gs.sidepots;
+
+    state.buyin = this.buyIn;
 
     // list of the community cards on the table
     // ... everyone is able to access this same list
@@ -264,7 +263,7 @@ const actions = {
 
     // minimum amount the player has to bet
     // in case he want to raise the call amount for the other players
-    state.minimumRaiseAmount = state.callAmount + (gs.lastRaiseAmount || 2 * gs.sb);
+    state.minimumRaiseAmount = state.callAmount + (gs.lastRaiseAmount || 2 * gs.config.SMALL_BLIND);
 
     // the list of the players...
     // make sure that the current players can see only his cards
@@ -445,7 +444,7 @@ exports = module.exports = function factory(obj, gs) {
 
   const player = Object.create(actions);
 
-  ['id', 'name', 'serviceUrl', 'userId', 'totalWinnings']
+  ['id', 'name', 'serviceUrl', 'userId']
     .forEach(prop => Object.defineProperty(player, prop, { value: obj[prop] }));
 
   // status of the player
@@ -457,8 +456,12 @@ exports = module.exports = function factory(obj, gs) {
 
   player.botType = obj.botType;
 
+  player.buyIn = obj.buyIn ? obj.buyIn : (gs.config.MAX_BUYIN + gs.config.MIN_BUYIN) / 2;
+
   // amount of chips available
-  player.chips = gs.config.BUYIN;
+  player.chips =  player.buyIn;
+
+  player.totalWinnings = obj.totalWinnings;
 
   // two private cards of the player
   player.cards = [];
@@ -476,7 +479,6 @@ exports = module.exports = function factory(obj, gs) {
 
   logger.info('%s (%s), registered as player.', player.name, player.id);
 
-  console.log(player);
   return player;
 
 };

@@ -73,13 +73,16 @@ router.post('/join', passport.authenticate('jwt', { session: false }), async (re
   Table.findAll({
     limit: 5,
     where: {
-      'config.BUYIN': req.body.buyin,
+      'config.SMALL_BLIND': req.body.table.smallBlind,
+      'config.MIN_BUYIN': req.body.table.minBuyin,
+      'config.MAX_BUYIN': req.body.table.maxBuyin,
       tableType: 'pvp',
     },
     order: [
       ['numPlayers', 'ASC']
     ]
   }).then(async tables => {
+    req.body.bot.buyin = req.body.buyin;
     for (let i = 1; i < 6; i++) {
       for (let table of tables) {
         if (table.numPlayers === i) {
@@ -89,12 +92,12 @@ router.post('/join', passport.authenticate('jwt', { session: false }), async (re
       }
 
       if (tables.length === 0) {
-        return await openNewTable(req.body.buyin, res, req.body.bot);
+        return await openNewTable(res, req);
       } else if (i === 5 && tables[0].numPlayers === 0) {
         engine.join(tables[0].id, [req.body.bot]);
         return res.status(200).json({ msg: 'Waiting for other players' });
       } else if (i === 5) {
-        return await openNewTable(req.body.buyin, res, req.body.bot);
+        return await openNewTable(res, req);
       }
     }
   }).catch(err => {
@@ -116,14 +119,22 @@ updateTable = (table) => {
   });
 };
 
-openNewTable = (buyin, res, bot) => {
-  return Table.create({ tableType: 'pvp', numPlayers: 1, 'config.BUYIN': buyin }).then(table => {
-    Bot.findOne({
+openNewTable = (res, req) => {
+  return Table.create({
+    tableType: 'pvp',
+    numPlayers: 1,
+    'config.SMALL_BLIND': req.body.table.smallBlind,
+    'config.MIN_BUYIN': req.body.table.minBuyin,
+    'config.MAX_BUYIN': req.body.table.maxBuyin,
+  }).then(table => {
+    Bot.findAll({
       where: {
         botType: 'pvp',
       },
-    }).then(sysbot => {
-      engine.start(table.dataValues, [bot, sysbot]);
+      limit: 2,
+    }).then(sysbots => {
+      sysbots.push(req.body.bot);
+      engine.start(table.dataValues, sysbots);
       return res.status(200).json({ msg: 'Joined Table' });
     })
   }).catch(err => {
