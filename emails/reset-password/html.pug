@@ -27,6 +27,10 @@ head
     margin:0;
     padding:0;
     width:100%;
+    background-color:#fafafa;
+    }
+    #bodyTable{
+    background-color:#fafafa;
     }
     .mcnPreviewText{
     display:none !important;
@@ -451,11 +455,9 @@ head
     /*@editable*/line-height:150% !important;
     }
     }
-// *|IF:MC_PREVIEW_TEXT|*
-// [if !gte mso 9] <!
-span.mcnPreviewText(style='display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;') *|MC_PREVIEW_TEXT|*
-// <![endif]
-// *|END:IF|*
+
+span.mcnPreviewText(style='display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;')
+
 center
   table#bodyTable(align='center' border='0' cellpadding='0' cellspacing='0' height='100%' width='100%')
     tr
@@ -498,14 +500,14 @@ center
                           td.mcnBoxedTextBlockInner(valign='top')
                             //if gte mso 9
                               td(align='center' valign='top')
-                            table.mcnBoxedTextContentContainer(align='left' border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                            table.mcnBoxedTextContentContainer(align='left' border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#fafafa;')
                               tbody
                                 tr
                                   td(style='padding-top:9px; padding-left:18px; padding-bottom:9px; padding-right:18px;')
-                                    table.mcnTextContentContainer(border='0' cellspacing='0' width='100%' style='min-width:100% !important;')
+                                    table.mcnTextContentContainer(border='0' cellspacing='0' width='100%' style='min-width:100% !important; background-color:#fafafa;')
                                       tbody
                                         tr
-                                          td.mcnTextContent(valign='top' style='padding: 18px;color: #404040;font-family: Helvetica;font-size: 14px;font-weight: normal;text-align: left;')
+                                          td.mcnTextContent(valign='top' style='padding: 18px;color: #404040;font-family: Helvetica;font-size: 14px;font-weight: normal;text-align: left; background-color:#fafafa;')
                                             p(dir='ltr' style='color: #404040;font-family: Helvetica;font-size: 14px;font-weight: normal;text-align: left;') Hello #{username},
                                             p(dir='ltr' style='color: #404040;font-family: Helvetica;font-size: 14px;font-weight: normal;text-align: left;')
                                               font(face='helvetica neue, helvetica, arial, verdana, sans-serif') In order to reset your password, please click the following link, will expire in one hour:
@@ -532,11 +534,11 @@ center
                                                   a(href='http://www.probotplayground.com') www.probotplayground.com
                             //if gte mso 9
                             //if gte mso 9
-                    table.mcnDividerBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                    table.mcnDividerBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#fafafa;')
                       tbody.mcnDividerBlockOuter
                         tr
-                          td.mcnDividerBlockInner(style='min-width:100%; padding:18px;')
-                            table.mcnDividerContent(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width: 100%;border-top: 2px solid #CC0000;')
+                          td.mcnDividerBlockInner(style='min-width:100%; padding:18px; background-color:#fafafa;')
+                            table.mcnDividerContent(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width: 100%;border-top: 2px solid #CC0000; background-color:#fafafa;')
                               tbody
                                 tr
                                   td
@@ -544,37 +546,37 @@ center
                             //
                               <td class="mcnDividerBlockInner" style="padding: 18px;">
                               <hr class="mcnDividerContent" style="border-bottom-color:none; border-left-color:none; border-right-color:none; border-bottom-width:0; border-left-width:0; border-right-width:0; margin-top:0; margin-right:0; margin-bottom:0; margin-left:0;" />
-                    table.mcnTextBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                    table.mcnTextBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#fafafa;')
                       tbody.mcnTextBlockOuter
                         tr
-                          td.mcnTextBlockInner(valign='top' style='padding-top:9px;')
+                          td.mcnTextBlockInner(valign='top' style='padding-top:9px; background-color:#fafafa;')
                             //if mso
                               table(align='left' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100%;')
                                 tr
                             //if mso
                               td(valign='top' width='600' style='width:600px;')
-                            table.mcnTextContentContainer(align='left' border='0' cellpadding='0' cellspacing='0' style='max-width:100%; min-width:100%;' width='100%')
+                            table.mcnTextContentContainer(align='left' border='0' cellpadding='0' cellspacing='0' style='max-width:100%; min-width:100%; background-color:#fafafa;' width='100%')
                               tbody
                                 tr
-                                  td.mcnTextContent(valign='top' style='padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;')
+                                  td.mcnTextContent(valign='top' style='padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px; background-color:#fafafa;')
                                     div(style='text-align: center;')
                                       span(style='font-size:17px')
                                         span(style='font-family:lora,georgia,times new roman,serif')
-                                          | Want bonus chips? Refer your friends and earn extra chips to help get you started!
+                                          | Need chips? Refer your friends and earn extra chips to help get you started!
                             //if mso
                             //if mso
                     table.mcnShareBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
                       tbody.mcnShareBlockOuter
                         tr
-                          td.mcnShareBlockInner(valign='top' style='padding:9px')
-                            table.mcnShareContentContainer(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                          td.mcnShareBlockInner(valign='top' style='padding:9px; background-color:#fafafa;')
+                            table.mcnShareContentContainer(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#fafafa;')
                               tbody
                                 tr
-                                  td(align='center' style='padding-top:0; padding-left:9px; padding-bottom:0; padding-right:9px;')
+                                  td(align='center' style='padding-top:0; padding-left:9px; padding-bottom:0; padding-right:9px; background-color:#fafafa;')
                                     table.mcnShareContent(align='center' border='0' cellpadding='0' cellspacing='0')
                                       tbody
                                         tr
-                                          td.mcnShareContentItemContainer(align='center' valign='top' style='padding-top:9px; padding-right:9px; padding-left:9px;')
+                                          td.mcnShareContentItemContainer(align='center' valign='top' style='padding-top:9px; padding-right:9px; padding-left:9px; background-color:#fafafa;')
                                             table(align='center' border='0' cellpadding='0' cellspacing='0')
                                               tbody
                                                 tr
@@ -587,11 +589,11 @@ center
                                                     table(align='left' border='0' cellpadding='0' cellspacing='0')
                                                       tbody
                                                         tr
-                                                          td.mcnShareContentItemContainer(valign='top' style='padding-right:9px; padding-bottom:9px;')
-                                                            table.mcnShareContentItem(border='0' cellpadding='0' cellspacing='0' width='' style='border-collapse: separate; border-radius: 0%;')
+                                                          td.mcnShareContentItemContainer(valign='top' style='padding-right:9px; padding-bottom:9px; background-color:#fafafa;')
+                                                            table.mcnShareContentItem(border='0' cellpadding='0' cellspacing='0' width='' style='border-collapse: separate; border-radius: 0%; background-color:#fafafa;')
                                                               tbody
                                                                 tr
-                                                                  td(align='left' valign='middle' style='padding-top:5px; padding-right:9px; padding-bottom:5px; padding-left:9px;')
+                                                                  td(align='left' valign='middle' style='padding-top:5px; padding-right:9px; padding-bottom:5px; padding-left:9px; background-color:#fafafa;')
                                                                     table(align='left' border='0' cellpadding='0' cellspacing='0' width='')
                                                                       tbody
                                                                         tr
@@ -606,11 +608,11 @@ center
                                                     table(align='left' border='0' cellpadding='0' cellspacing='0')
                                                       tbody
                                                         tr
-                                                          td.mcnShareContentItemContainer(valign='top' style='padding-right:9px; padding-bottom:9px;')
-                                                            table.mcnShareContentItem(border='0' cellpadding='0' cellspacing='0' width='' style='border-collapse: separate; border-radius: 0%;')
+                                                          td.mcnShareContentItemContainer(valign='top' style='padding-right:9px; padding-bottom:9px; background-color:#fafafa;')
+                                                            table.mcnShareContentItem(border='0' cellpadding='0' cellspacing='0' width='' style='border-collapse: separate; border-radius: 0%; background-color:#fafafa;')
                                                               tbody
                                                                 tr
-                                                                  td(align='left' valign='middle' style='padding-top:5px; padding-right:9px; padding-bottom:5px; padding-left:9px;')
+                                                                  td(align='left' valign='middle' style='padding-top:5px; padding-right:9px; padding-bottom:5px; padding-left:9px; background-color:#fafafa;')
                                                                     table(align='left' border='0' cellpadding='0' cellspacing='0' width='')
                                                                       tbody
                                                                         tr
@@ -625,11 +627,11 @@ center
                                                     table(align='left' border='0' cellpadding='0' cellspacing='0')
                                                       tbody
                                                         tr
-                                                          td.mcnShareContentItemContainer(valign='top' style='padding-right:9px; padding-bottom:9px;')
-                                                            table.mcnShareContentItem(border='0' cellpadding='0' cellspacing='0' width='' style='border-collapse: separate; border-radius: 0%;')
+                                                          td.mcnShareContentItemContainer(valign='top' style='padding-right:9px; padding-bottom:9px; background-color:#fafafa;')
+                                                            table.mcnShareContentItem(border='0' cellpadding='0' cellspacing='0' width='' style='border-collapse: separate; border-radius: 0%; background-color:#fafafa;')
                                                               tbody
                                                                 tr
-                                                                  td(align='left' valign='middle' style='padding-top:5px; padding-right:9px; padding-bottom:5px; padding-left:9px;')
+                                                                  td(align='left' valign='middle' style='padding-top:5px; padding-right:9px; padding-bottom:5px; padding-left:9px; background-color:#fafafa;')
                                                                     table(align='left' border='0' cellpadding='0' cellspacing='0' width='')
                                                                       tbody
                                                                         tr
@@ -640,11 +642,11 @@ center
                                                                             a(href='https://www.linkedin.com/company/probot-playground-inc/' target='' style='color: #CC0000;font-family: Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;font-size: 12px;font-weight: normal;line-height: normal;text-align: center;text-decoration: none;') Share
                                                     //if mso
                                                     //if mso
-                    table.mcnDividerBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                    table.mcnDividerBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#fafafa;')
                       tbody.mcnDividerBlockOuter
                         tr
-                          td.mcnDividerBlockInner(style='min-width:100%; padding:18px;')
-                            table.mcnDividerContent(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                          td.mcnDividerBlockInner(style='min-width:100%; padding:18px; background-color:#fafafa;')
+                            table.mcnDividerContent(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#fafafa;')
                               tbody
                                 tr
                                   td
@@ -662,19 +664,19 @@ center
               table.templateContainer(align='center' border='0' cellpadding='0' cellspacing='0' width='100%')
                 tr
                   td.footerContainer(valign='top')
-                    table.mcnTextBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%;')
+                    table.mcnTextBlock(border='0' cellpadding='0' cellspacing='0' width='100%' style='min-width:100%; background-color:#cc0000;')
                       tbody.mcnTextBlockOuter
                         tr
-                          td.mcnTextBlockInner(valign='top' style='padding-top:9px;')
+                          td.mcnTextBlockInner(valign='top' style='padding-top:9px; background-color:#cc0000;')
                             //if mso
                               table(align='left' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100%;')
                                 tr
                             //if mso
                               td(valign='top' width='600' style='width:600px;')
-                            table.mcnTextContentContainer(align='left' border='0' cellpadding='0' cellspacing='0' style='max-width:100%; min-width:100%;' width='100%')
+                            table.mcnTextContentContainer(align='left' border='0' cellpadding='0' cellspacing='0' style='max-width:100%; min-width:100%; background-color:#cc0000;' width='100%')
                               tbody
                                 tr
-                                  td.mcnTextContent(valign='top' style='padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;')
+                                  td.mcnTextContent(valign='top' style='padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px; background-color:#cc0000;')
                                     br
                                     br
                                     em Copyright &copy; Probot Playground Inc., All rights reserved.
