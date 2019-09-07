@@ -226,9 +226,6 @@ const actions = {
 
     const state = Object.create(null);
 
-    // unique id of the current tournament
-    state.tournamentId = gs.tournamentId;
-
     // game number of the current tournament
     state.game = gs.gameProgressiveId;
 
@@ -269,7 +266,7 @@ const actions = {
     // make sure that the current players can see only his cards
     state.players = gs.players.map(function (player) {
       const cleanPlayer = {
-        id: player.id, name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
+        name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
       };
       if (this.id !== player.id) {
         return cleanPlayer;
@@ -283,7 +280,7 @@ const actions = {
 
     let history = await Update.findAll({
       where: {
-        tournamentId: state.tournamentId,
+        tournamentId: gs.tournamentId,
         handId: state.hand,
         gameId: state.game
       }
@@ -352,11 +349,13 @@ const actions = {
 function cleanHistory(id, history) {
   let cleanHistory = history;
   for (let update of cleanHistory) {
-    if (Array.isArray(update.players))
+    if (Array.isArray(update.players)) {
       for (let player of update.players) {
         if (player.id !== id) {
           delete player.cards;
         }
+
+        delete player.botType;
         delete player.id;
         delete player.totalWinnings;
         delete player.willLeave;
@@ -364,6 +363,11 @@ function cleanHistory(id, history) {
         delete player.bestCombination;
         delete player.bestCombinationData;
       }
+    }
+
+    delete update.tournamentId;
+    delete update.id;
+    delete update.playerId;
   }
   return cleanHistory;
 }

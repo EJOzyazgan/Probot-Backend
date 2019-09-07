@@ -144,11 +144,13 @@ router.post('/get/data', passport.authenticate('jwt', {session: false}), async (
 function cleanHistory(id, history) {
   let cleanHistory = history;
   for (let update of cleanHistory) {
-    if (Array.isArray(update.players))
+    if (Array.isArray(update.players)) {
       for (let player of update.players) {
         if (player.id !== id) {
           delete player.cards;
         }
+
+        delete player.botType;
         delete player.id;
         delete player.totalWinnings;
         delete player.willLeave;
@@ -156,6 +158,11 @@ function cleanHistory(id, history) {
         delete player.bestCombination;
         delete player.bestCombinationData;
       }
+    }
+
+    delete update.tournamentId;
+    delete update.id;
+    delete update.playerId;
   }
   return cleanHistory;
 }
