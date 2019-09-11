@@ -152,7 +152,8 @@ const actions = {
       session: gs.session,
       playerId: this.id,
       amount: betAmount,
-      players: gs.players
+      players: gs.players,
+      pot: gs.pot,
     });
   },
 
@@ -266,7 +267,7 @@ const actions = {
     // make sure that the current players can see only his cards
     state.players = gs.players.map(function (player) {
       const cleanPlayer = {
-        name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
+        id: player.id, name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
       };
       if (this.id !== player.id) {
         return cleanPlayer;
