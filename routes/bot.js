@@ -100,7 +100,7 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req,
 //   });
 // });
 
-router.post('/get/data', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/get/data/clean', passport.authenticate('jwt', {session: false}), async (req, res) => {
   Update.findAll({
     where: {
       playerId: '' + req.body.botId,
@@ -112,8 +112,33 @@ router.post('/get/data', passport.authenticate('jwt', {session: false}), async (
       exclude: ['id', 'tournamentId', 'playerId', 'updatedAt', 'gameId', 'handId', 'sb',]
     }
   }).then(updates => {
-
     return res.status(200).send(cleanHistory(req.body.botId, updates));
+  }).catch(err => {
+    return res.status(400).json({msg: 'Error getting data', error: err});
+  });
+});
+
+router.post('/get/data', passport.authenticate('jwt', {session: false}), async (req, res) => {
+  Update.findAll({
+    where: {
+      createdAt: {
+        [Op.gte]: moment().subtract(req.body.timePeriod[2], req.body.timePeriod[1])
+      },
+    },
+    attributes: {
+      exclude: ['id', 'updatedAt']
+    },
+    order: [['createdAt', 'ASC']],
+  }).then(updates => {
+    filtered = updates.filter(u => {
+      for (let player of u.players) {
+        if (player.id === req.body.botId) {
+          return true;
+        }
+      }
+    });
+
+    return res.status(200).send(filtered);
   }).catch(err => {
     return res.status(400).json({msg: 'Error getting data', error: err});
   });

@@ -152,7 +152,8 @@ const actions = {
       session: gs.session,
       playerId: this.id,
       amount: betAmount,
-      players: gs.players
+      players: gs.players,
+      pot: gs.pot,
     });
   },
 
