@@ -36,7 +36,7 @@ exports = module.exports = function* teardown(gs) {
 
   if (gs.tableType !== 'sandbox') {
     gs.winners.forEach(player => {
-      engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, handsWon: 1, totalWinnings: (player.totalWinnings - player.chips) }));
+      engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, handsWon: 1, isActive: true, totalWinnings: player.totalWinnings}));
       engine.emit('gamestate:create-metric', Object.assign({}, {
         metricType: constants.HAND_WON,
         value: 1,
@@ -49,17 +49,17 @@ exports = module.exports = function* teardown(gs) {
 
   yield save({ type: 'win', handId: gs.handUniqueId, winners: gs.winners, players: gs.players });
 
-
-  for (let i = 0; i < activePlayers.length; i++) {
-    let player = activePlayers[i];
-    if (player.chips === 0) {
+  for (let player of gs.players) {
+    if (player.chips <= 0) {
       if (player.botType === 'userBot') {
-        gs.players.splice(gs.players.findIndex(p => p.id === player.id));
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
-        engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false }));
+        engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
+        engine.emit('gamestate:end-session', player.sessionId);
+        if (gs.tableType !== 'sandbox') {
+          engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
+        }
         yield save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
       } else if (gs.tableType === 'sandbox') {
-        gs.players.splice(gs.players.findIndex(p => p.id === player.id));
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
       } else {
         player.chips += gs.config.MAX_BUYIN;
@@ -69,7 +69,8 @@ exports = module.exports = function* teardown(gs) {
 
   updatePlayersStatus(gs);
 
-  if (gs.activePlayers < 2) {
+
+  if (gs.activePlayers < 3) {
     if (gs.tableType === 'sandbox')
       gs.tournamentStatus = gameStatus.stop;
     else

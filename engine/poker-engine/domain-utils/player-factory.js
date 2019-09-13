@@ -267,7 +267,7 @@ const actions = {
     // make sure that the current players can see only his cards
     state.players = gs.players.map(function (player) {
       const cleanPlayer = {
-        name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
+        id: player.id, name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
       };
       if (this.id !== player.id) {
         return cleanPlayer;
@@ -310,6 +310,7 @@ const actions = {
                 botMessage: 'Please make sure bot url is correct'
               }));
             engine.emit('gamestate:update-bot', Object.assign({}, { id: this.id, isActive: false }));
+            engine.emit('gamestate:end-session', player.sessionId);
             engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
             gs.tournamentStatus = gameStatus.stop;
           }
@@ -348,8 +349,7 @@ const actions = {
 };
 
 function cleanHistory(id, history) {
-  let cleanHistory = history;
-  for (let update of cleanHistory) {
+  history.map(update => {
     if (Array.isArray(update.players)) {
       for (let player of update.players) {
         if (player.id !== id) {
@@ -361,6 +361,7 @@ function cleanHistory(id, history) {
         delete player.totalWinnings;
         delete player.willLeave;
         delete player.willJoin;
+        delete player.sessionId;
         delete player.bestCombination;
         delete player.bestCombinationData;
       }
@@ -368,9 +369,9 @@ function cleanHistory(id, history) {
 
     delete update.tournamentId;
     delete update.id;
-    delete update.playerId;
-  }
-  return cleanHistory;
+    update.playerId = null;
+  });
+  return history;
 }
 
 
@@ -449,11 +450,15 @@ exports = module.exports = function factory(obj, gs) {
 
   const player = Object.create(actions);
 
-  ['id', 'name', 'serviceUrl', 'userId']
+  ['name', 'serviceUrl', 'userId']
     .forEach(prop => Object.defineProperty(player, prop, { value: obj[prop] }));
 
   // status of the player
   player.status = playerStatus.active;
+
+  player.id = obj.id;
+
+  player.sessionId = null;
 
   player.willLeave = false;
 
@@ -461,10 +466,10 @@ exports = module.exports = function factory(obj, gs) {
 
   player.botType = obj.botType;
 
-  player.buyIn = obj.buyIn ? obj.buyIn : (gs.config.MAX_BUYIN + gs.config.MIN_BUYIN) / 2;
+  player.buyIn = obj.buyin ? obj.buyin : (gs.config.MAX_BUYIN + gs.config.MIN_BUYIN) / 2;
 
   // amount of chips available
-  player.chips =  player.buyIn;
+  player.chips = player.buyIn;
 
   player.totalWinnings = obj.totalWinnings;
 
@@ -479,7 +484,8 @@ exports = module.exports = function factory(obj, gs) {
 
   if (gs.tableType !== 'sandbox' && player.botType === 'userBot') {
     engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: (player.chips * -1) }));
-    engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: (player.totalWinnings - player.chips) }));
+    engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: (player.totalWinnings - obj.buyin) }));
+    player.totalWinnings = player.totalWinnings - obj.buyin;
   }
 
   logger.info('%s (%s), registered as player.', player.name, player.id);

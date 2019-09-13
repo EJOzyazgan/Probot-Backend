@@ -28,16 +28,18 @@ exports = module.exports = async function resetGamestate(gs) {
   const hasBB_ = Symbol.for('has-big-blind');
 
   gs.players = gs.players.filter((player) => {
-    if(player.willLeave && gs.tableType !== 'sandbox' && player.botType === 'userBot') {
+    if (player.willLeave && gs.tableType !== 'sandbox' && player.botType === 'userBot') {
       player.totalWinnings += player.chips;
-      engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, totalWinnings: player.totalWinnings}));
-      engine.emit('gamestate:update-user', Object.assign({}, {id: player.userId, chips: player.chips}));
-      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.TOTAL_WINNINGS, value: player.totalWinnings, botId: player.id}));
+      engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: player.totalWinnings, isActive: false }));
+      engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
+      engine.emit('gamestate:create-metric', Object.assign({}, { metricType: constants.TOTAL_WINNINGS, value: player.totalWinnings, botId: player.id }));
+      this.emit('gamestate:end-session', player.sessionId);
+      return false;
     }
-    return !player.willLeave
+    return true;
   });
 
-  engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
+  engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
 
   gs.players.forEach(function (player) {
 
@@ -61,11 +63,11 @@ exports = module.exports = async function resetGamestate(gs) {
 
   });
 
-  if (gs.players.length < 2) {
-    logger.info('Tournament %s waiting for more players players.', gs.tournamentId, {tag: gs.handUniqueId});
+  if (gs.players.length < 3) {
+    logger.info('Tournament %s waiting for more players players.', gs.tournamentId, { tag: gs.handUniqueId });
     gs.tournamentStatus = tournamentStatus.pause;
   } else {
     gs.tournamentStatus = tournamentStatus.play;
-    engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
+    engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
   }
 };
