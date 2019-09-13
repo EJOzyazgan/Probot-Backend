@@ -1,5 +1,6 @@
 const engine = require('../engine/index');
 const app = require('../app');
+const moment = require('moment');
 const models = require('../models');
 const Update = models.Update;
 const Game = models.Game;
@@ -7,6 +8,7 @@ const Table = models.Table;
 const User = models.User;
 const Bot = models.Bot;
 const Metric = models.Metric;
+const Session = models.Session;
 
 module.exports = {
   start: (table, bots, mainBot) => {
@@ -44,6 +46,10 @@ engine.on('gamestate:update-user', (data) => {
 
 engine.on('gamestate:create-metric', (data) => {
   createMetric(data);
+});
+
+engine.on('gamestate:end-session', (id) => {
+  endSession(id);
 });
 
 engine.on('sandbox:update', data => {
@@ -90,14 +96,14 @@ let updateTable = (data) => {
     numPlayers: data.numPlayers,
     isActive: data.numPlayers > 1
   }, {
-      where: {
-        id: data.id
-      }
-    }).then(() => {
+    where: {
+      id: data.id
+    }
+  }).then(() => {
 
-    }).catch((err) => {
-      console.log(err);
-    });
+  }).catch((err) => {
+    console.log(err);
+  });
 };
 
 let updateUser = (data) => {
@@ -113,14 +119,14 @@ let updateUser = (data) => {
     User.update({
       chips: user.chips,
     }, {
-        where: {
-          id: user.id
-        }
-      }).then(() => {
+      where: {
+        id: user.id
+      }
+    }).then(() => {
 
-      }).catch((err) => {
-        console.log(err);
-      });
+    }).catch((err) => {
+      console.log(err);
+    });
   }).catch((err) => {
     console.log(err);
   });
@@ -147,14 +153,14 @@ let updateBot = (data) => {
       totalWinnings: bot.totalWinnings,
       isActive: bot.isActive,
     }, {
-        where: {
-          id: bot.id
-        }
-      }).then(() => {
+      where: {
+        id: bot.id
+      }
+    }).then(() => {
 
-      }).catch((err) => {
-        console.log(err);
-      });
+    }).catch((err) => {
+      console.log(err);
+    });
   }).catch((err) => {
     console.log(err);
   });
@@ -163,3 +169,15 @@ let updateBot = (data) => {
 let createMetric = (data) => {
   Metric.create(data);
 };
+
+let endSession = (id) => {
+  if (id) {
+    Session.update({
+      endedAt: moment().format(),
+    }, {
+      where: {
+        id,
+      }
+    });
+  }
+}

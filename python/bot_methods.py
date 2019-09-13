@@ -16,9 +16,7 @@ def leave_bot(game_state):
 def parzival(game_state):
     gs = game_state['state']
 
-    if gs['hand'] == 2:
-        return -1
-    return 0
+    return game_state['state']['callAmount']
 
 
 # Call every time
@@ -46,8 +44,8 @@ def good_game(game_state):
     p = gs['players']
     me = p[gs['me']]
 
-    if gs['game'] == 1 and gs['hand'] == 3:
-        return -1
+    # if gs['game'] == 1 and gs['hand'] == 3:
+    #     return -1
 
     if me['cards'][0]['rank'] == me['cards'][1]['rank']:
         return gs['minimumRaiseAmount'] * 2

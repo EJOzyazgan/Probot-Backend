@@ -48,7 +48,7 @@ module.exports = (sequalize, DataTypes) => {
         // the progression of small blinds
         SMALL_BLINDS: [5, 10, 25, 50, 75, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000],
 
-        SMALL_BLIND: 1,
+        SMALL_BLIND: 30,
 
         // duration of a small blind value,
         // expressed in terms of "DB turns of the table"

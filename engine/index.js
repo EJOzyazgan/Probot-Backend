@@ -7,6 +7,9 @@ const EventEmitter = events.EventEmitter;
 const setup_ = Symbol('setup-tournament-method');
 const tournaments_ = Symbol('tournament-collection');
 
+const models = require('../models');
+const Session = models.Session;
+
 const gamestate = Object.create(EventEmitter.prototype, {
 
   /**
@@ -63,16 +66,24 @@ const gamestate = Object.create(EventEmitter.prototype, {
         }
       });
 
-      if (gs.players.length < 2) {
+      if (gs.players.length < 3) {
         logger.info('Tournament %s waiting for more players players.', tournament.id, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
         this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
         this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
-        for (let player of gs.players) {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips) }));
-        }
+        gs.players.map(async player => {
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: player.totalWinnings }));
+          if (!player.sessionId && player.botType === 'userBot') {
+            await Session.create({
+              botId: player.id,
+              tableType: gs.tableType,
+            }).then(session => {
+              player.sessionId = session.id;
+            });
+          }
+        });
       }
 
       this[tournaments_].set(tournament.id, gs);
@@ -86,10 +97,13 @@ const gamestate = Object.create(EventEmitter.prototype, {
           this[tournaments_].delete(tournament.id);
           if (gs.tableType === 'sandbox') {
             this.emit('sandbox:update', Object.assign({}, { id: gs.mainPlayer.id, gameCompleted: true }));
-            this.emit('gamestate:update-bot', Object.assign({}, { id: gs.mainPlayer.id, isActive: false }));
           }
           for (let player of gs.players) {
-            this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false }));
+            this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
+            if (gs.tableType !== 'sandbox') {
+              this.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
+            }
+            this.emit('gamestate:end-session', player.sessionId);
           }
           this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: 0 }));
           return this.emit('tournament:completed', { tournamentId: tournament.id });
@@ -148,14 +162,6 @@ const gamestate = Object.create(EventEmitter.prototype, {
 
       gs.tournamentStatus = tournamentStatus.play;
       this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
-
-      for (let player of gs.players) {
-        if (gs.tableType !== 'sandbox') {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips) }));
-        } else {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true }));
-        }
-      }
     }
   },
 
@@ -167,7 +173,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return createPlayer(p, gs)
       }).filter(x => x != null));
 
-      if (gs.players.length < 2) {
+      if (gs.players.length < 3) {
         logger.info('Tournament %s waiting for more players players.', tournamentId, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
         this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
@@ -175,9 +181,17 @@ const gamestate = Object.create(EventEmitter.prototype, {
         gs.tournamentStatus = tournamentStatus.play;
         this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
 
-        for (let player of gs.players) {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: (player.totalWinnings - player.chips) }));
-        }
+        gs.players.map(async player => {
+          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: player.totalWinnings }));
+          if (!player.sessionId && player.botType === 'userBot') {
+            await Session.create({
+              botId: player.id,
+              tableType: gs.tableType,
+            }).then(session => {
+              player.sessionId = session.id;
+            });
+          }
+        });
       }
     }
   },
@@ -236,6 +250,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
     }
   }
 });
+
 
 // gamestate[tournaments_] contains the game information
 // about the various tournaments

@@ -5,10 +5,11 @@ const models = require('../models');
 const Bot = models.Bot;
 const Update = models.Update;
 const User = models.User;
+const Session = models.Session;
 const moment = require('moment');
 const Op = require('sequelize').Op;
 
-router.get('/get/user', passport.authenticate('jwt', {session: false}), (req, res, next) => {
+router.get('/get/user', passport.authenticate('jwt', { session: false }), (req, res, next) => {
   Bot.findOne({
     where: {
       userId: req.user.dataValues.id
@@ -16,11 +17,11 @@ router.get('/get/user', passport.authenticate('jwt', {session: false}), (req, re
   }).then((bot) => {
     return res.status(200).json(bot);
   }).catch((e) => {
-    res.status(400).json({msg: 'Error finding bot', error: e});
+    res.status(400).json({ msg: 'Error finding bot', error: e });
   });
 });
 
-router.get('/get/admin', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/get/admin', passport.authenticate('jwt', { session: false }), async (req, res) => {
   let admin = false;
 
   await User.findOne({
@@ -34,7 +35,7 @@ router.get('/get/admin', passport.authenticate('jwt', {session: false}), async (
       admin = true;
     }
   }).catch(err => {
-    return res.status(400).json({msg: 'Error validating admin', error: err});
+    return res.status(400).json({ msg: 'Error validating admin', error: err });
   });
 
   if (admin) {
@@ -47,11 +48,11 @@ router.get('/get/admin', passport.authenticate('jwt', {session: false}), async (
     }).then(bots => {
       return res.status(200).send(bots);
     }).catch(err => {
-      return res.status(400).json({msg: 'Error getting admin bots', error: err});
+      return res.status(400).json({ msg: 'Error getting admin bots', error: err });
     })
   }
 
-  return res.stats(200).json({msg: 'Not a valid admin'});
+  return res.stats(200).json({ msg: 'Not a valid admin' });
 });
 
 router.post('/create', async (req, res) => {
@@ -59,11 +60,11 @@ router.post('/create', async (req, res) => {
     .then((bot) => res.status(200).json(bot))
     .catch((error) => {
       console.log(error);
-      res.status(400).json({msg: 'Error creating bot', error: error});
+      res.status(400).json({ msg: 'Error creating bot', error: error });
     });
 });
 
-router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req, res) => {
+router.patch('/patch/:id', passport.authenticate('jwt', { session: false }), (req, res) => {
   Bot.update({
     name: req.body.name,
     serviceUrl: req.body.serviceUrl,
@@ -82,7 +83,7 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req,
   }).then(([rowsUpdate, [updatedBot]]) => {
     return res.status(200).json(updatedBot);
   }).catch((e) => {
-    res.status(400).json({msg: 'Error updating bot', error: e});
+    res.status(400).json({ msg: 'Error updating bot', error: e });
   });
 });
 
@@ -100,29 +101,12 @@ router.patch('/patch/:id', passport.authenticate('jwt', {session: false}), (req,
 //   });
 // });
 
-router.post('/get/data/clean', passport.authenticate('jwt', {session: false}), async (req, res) => {
-  Update.findAll({
-    where: {
-      playerId: '' + req.body.botId,
-      createdAt: {
-        [Op.gte]: moment().subtract(req.body.timePeriod[2], req.body.timePeriod[1])
-      },
-    },
-    attributes: {
-      exclude: ['id', 'tournamentId', 'playerId', 'updatedAt', 'gameId', 'handId', 'sb',]
-    }
-  }).then(updates => {
-    return res.status(200).send(cleanHistory(req.body.botId, updates));
-  }).catch(err => {
-    return res.status(400).json({msg: 'Error getting data', error: err});
-  });
-});
-
-router.post('/get/data', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/get/data/clean', passport.authenticate('jwt', { session: false }), async (req, res) => {
   Update.findAll({
     where: {
       createdAt: {
-        [Op.gte]: moment().subtract(req.body.timePeriod[2], req.body.timePeriod[1])
+        [Op.gte]: req.body.createdAt,
+        [Op.lte]: req.body.endedAt,
       },
     },
     attributes: {
@@ -130,17 +114,41 @@ router.post('/get/data', passport.authenticate('jwt', {session: false}), async (
     },
     order: [['createdAt', 'ASC']],
   }).then(updates => {
-    filtered = updates.filter(u => {
-      for (let player of u.players) {
-        if (player.id === req.body.botId) {
-          return true;
-        }
-      }
-    });
-
-    return res.status(200).send(filtered);
+    return res.status(200).send(cleanHistory(req.body.botId, updates));
   }).catch(err => {
-    return res.status(400).json({msg: 'Error getting data', error: err});
+    return res.status(400).json({ msg: 'Error getting data', error: err });
+  });
+});
+
+router.post('/get/data', passport.authenticate('jwt', { session: false }), async (req, res) => {
+  Update.findAll({
+    where: {
+      createdAt: {
+        [Op.gte]: req.body.createdAt,
+        [Op.lte]: req.body.endedAt,
+      },
+    },
+    attributes: {
+      exclude: ['id', 'updatedAt']
+    },
+    order: [['createdAt', 'ASC']],
+  }).then(updates => {
+    return res.status(200).send(updates);
+  }).catch(err => {
+    return res.status(400).json({ msg: 'Error getting data', error: err });
+  });
+});
+
+router.get('/get/sessions/:botId', passport.authenticate('jwt', { session: false }), async (req, res) => {
+  Session.findAll({
+    where: {
+      botId: req.params.botId
+    },
+    order: [['createdAt', 'DESC']]
+  }).then(sessions => {
+    return res.status(200).send(sessions);
+  }).catch(err => {
+    return res.status(400).json({ msg: 'Error getting data', error: err });
   });
 });
 
@@ -167,8 +175,7 @@ router.post('/get/data', passport.authenticate('jwt', {session: false}), async (
 // });
 
 function cleanHistory(id, history) {
-  let cleanHistory = history;
-  for (let update of cleanHistory) {
+  history.map(update => {
     if (Array.isArray(update.players)) {
       for (let player of update.players) {
         if (player.id !== id) {
@@ -180,6 +187,7 @@ function cleanHistory(id, history) {
         delete player.totalWinnings;
         delete player.willLeave;
         delete player.willJoin;
+        delete player.sessionId;
         delete player.bestCombination;
         delete player.bestCombinationData;
       }
@@ -187,9 +195,9 @@ function cleanHistory(id, history) {
 
     delete update.tournamentId;
     delete update.id;
-    delete update.playerId;
-  }
-  return cleanHistory;
+    update.playerId = null;
+  });
+  return history;
 }
 
 module.exports = router;
