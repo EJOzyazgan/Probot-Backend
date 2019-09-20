@@ -21,7 +21,7 @@ def parzival(game_state):
 
 # Call every time
 def one_hit_wonder(game_state):
-    return game_state['state']['callAmount']
+    return game_state['state']['minimumRaiseAmount']
 
 
 # Gets bot from game_state
@@ -144,7 +144,7 @@ def triton_bot(game_state):
         rank += 11
     elif me['cards'][1]['rank'] == 'Q':
         rank += 12
-    elif me['cards'][11]['rank'] == 'K':
+    elif me['cards'][1]['rank'] == 'K':
         rank += 13
     elif me['cards'][1]['rank'] == 'A':
         rank += 14

@@ -48,7 +48,7 @@ def get_bot():
         # f = open("r2d2_data.txt", "a+")
         # f.write(',')
         # f.close()
-        return str(bot_methods.good_game(request.json))
+        return str(bot_methods.triton_bot(request.json))
     elif player['id'] == 20:
         return str(bot_methods.RIP_bot(request.json))
     elif player['id'] == 25:
