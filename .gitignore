@@ -5,6 +5,9 @@
 
 # dependencies
 /node_modules
+/python
+/__pycache__
+/venv
 
 
 # IDEs and editors

@@ -4,7 +4,7 @@ const playerStatus = require('./domain/player-status');
 const gameStatus = require('./domain/tournament-status');
 
 const logger = require('../storage/logger');
-const save = require('../storage/storage').save;
+const storage = require('../storage/storage');
 
 const showdown = require('./domain-utils/showdown');
 const assignPot = require('./domain-utils/assign-pot');
@@ -14,7 +14,7 @@ const engine = require('../index');
 const constants = require('../../config/constants');
 
 
-exports = module.exports = function* teardown(gs) {
+exports = module.exports = async function teardown(gs) {
 
 
   logger.info('Hand %d/%d, starting teardown ops', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
@@ -29,36 +29,48 @@ exports = module.exports = function* teardown(gs) {
 
   logger.log('debug', getRankingLogMessage(gs.handChart), { tag: gs.handUniqueId });
 
-  yield save({ type: 'showdown', handId: gs.handUniqueId, players: gs.players });
+  await storage.save({ type: 'showdown', handId: gs.handUniqueId, players: gs.players });
 
 
   assignPot(gs);
 
   if (gs.tableType !== 'sandbox') {
-    gs.winners.forEach(player => {
-      engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, handsWon: 1, isActive: true, totalWinnings: player.totalWinnings}));
-      engine.emit('gamestate:create-metric', Object.assign({}, {
+    for (let player of gs.winners) {
+      await storage.updateBot({ id: player.id, handsWon: 1, isActive: true });
+      //engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, handsWon: 1, isActive: true, totalWinnings: player.totalWinnings}));
+      await storage.createMetric({
         metricType: constants.HAND_WON,
         value: 1,
         botId: player.id
-      }));
-    });
+      });
+    }
+      // engine.emit('gamestate:create-metric', Object.assign({}, {
+      //   metricType: constants.HAND_WON,
+      //   value: 1,
+      //   botId: player.id
+      // }));
   }
 
   logger.log('debug', getWinsLogMessage(gs.winners), { tag: gs.handUniqueId });
 
-  yield save({ type: 'win', handId: gs.handUniqueId, winners: gs.winners, players: gs.players });
+  await storage.save({ type: 'win', handId: gs.handUniqueId, winners: gs.winners, players: gs.players });
 
-  for (let player of gs.players) {
+  for (let i = 0; i < gs.players.length; i++) {
+    const player = gs.players[i];
     if (player.chips <= 0) {
       if (player.botType === 'userBot') {
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
-        engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
-        engine.emit('gamestate:end-session', player.sessionId);
-        if (gs.tableType !== 'sandbox') {
-          engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
-        }
-        yield save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
+        await storage.updateBot({ id: player.id, isActive: false });
+        await storage.createMetric({ metricType: constants.TOTAL_WINNINGS, value: (player.totalWinnings + player.chips), botId: player.id });
+        //engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
+        await storage.endSession(player.sessionId);
+        //engine.emit('gamestate:end-session', player.sessionId);
+        // if (gs.tableType !== 'sandbox') {
+        //   await storage.updateUser({ id: player.userId, });
+        //   //engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
+        // }
+        await storage.save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
+        gs.players.splice(i, 1);
       } else if (gs.tableType === 'sandbox') {
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
       } else {
@@ -70,13 +82,14 @@ exports = module.exports = function* teardown(gs) {
   updatePlayersStatus(gs);
 
 
-  if (gs.activePlayers < 3) {
+  if (gs.players < 3) {
     if (gs.tableType === 'sandbox')
       gs.tournamentStatus = gameStatus.stop;
     else
       gs.tournamentStatus = gameStatus.pause;
   }
 
+  await storage.updateTable({ id: gs.tournamentId, numPlayers: gs.players.length });
 
   gs.handChart = gs.winners = null;
 

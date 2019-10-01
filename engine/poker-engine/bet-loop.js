@@ -1,7 +1,7 @@
 'use strict';
 
 const logger = require('../storage/logger');
-const save = require('../storage/storage').save;
+const storage = require('../storage/storage');
 
 
 const gameSession = require('./domain/game-session');
@@ -12,8 +12,6 @@ const shouldBreak = require('./domain-utils/should-break');
 
 
 const asyncFrom = require('./lib/loop-from-async');
-
-const sleep = require('sleep-promise');
 
 
 /**
@@ -28,15 +26,19 @@ const sleep = require('sleep-promise');
  *
  * @returns {void}
  */
-exports = module.exports = function* betLoop(gs) {
+exports = module.exports = async function betLoop(gs) {
 
-    logger.info('Hand %d/%d, starting betting session', gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
+    logger.info('Hand %d/%d, starting betting session', gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
 
 
     const deck_ = Symbol.for('cards-deck');
     const hasBB_ = Symbol.for('has-big-blind');
     const hasDB_ = Symbol.for('has-dealer-button');
     const hasTalked_ = Symbol.for('has-talked');
+
+    function sleep(time) {
+        return new Promise(resolve => setTimeout(resolve(true), time));
+    }
 
     // the betting loop continues until
     // all the community cards are shown
@@ -48,8 +50,8 @@ exports = module.exports = function* betLoop(gs) {
         gs.session = getGameSession(gs.commonCards.length);
 
 
-        logger.log('debug', 'Hand %d/%d, %s', gs.gameProgressiveId, gs.handProgressiveId, gs.session, {tag: gs.handUniqueId});
-        logger.log('debug', getPlayerStatusLogMessage(gs.players), {tag: gs.handUniqueId});
+        logger.log('debug', 'Hand %d/%d, %s', gs.gameProgressiveId, gs.handProgressiveId, gs.session, { tag: gs.handUniqueId });
+        logger.log('debug', getPlayerStatusLogMessage(gs.players), { tag: gs.handUniqueId });
 
 
         // count the number of time that players had already have the possibility
@@ -61,10 +63,12 @@ exports = module.exports = function* betLoop(gs) {
 
         do {
 
-            yield* asyncFrom(gs.players, startIndex, shouldBreak.bind(null, gs),
+            await asyncFrom(gs.players, startIndex, shouldBreak.bind(null, gs),
                 player => shouldBet(gs, player, async player => {
 
-                    player.talk(gs).then(player.payBet.bind(player, gs));
+                    const bet = await player.talk(gs);
+                    
+                    await player.payBet(gs, bet);
 
                     if (gs.config.BETWAIT) {
                         await sleep(gs.config.BETWAIT);
@@ -97,7 +101,7 @@ exports = module.exports = function* betLoop(gs) {
             const winner = activePlayers[0];
 
             return void logger.info('Hand %d/%d, after the %s session, the only active player is %s',
-                gs.gameProgressiveId, gs.handProgressiveId, gs.session, winner.name, {tag: gs.handUniqueId});
+                gs.gameProgressiveId, gs.handProgressiveId, gs.session, winner.name, { tag: gs.handUniqueId });
 
         } else if (gs.commonCards.length < 5) {
 
@@ -111,9 +115,9 @@ exports = module.exports = function* betLoop(gs) {
 
 
             logger.log('debug', 'Hand %d/%d, common cards (%s) are %s',
-                gs.gameProgressiveId, gs.handProgressiveId, gs.session, getCommonCardsLogMessage(gs.commonCards), {tag: gs.handUniqueId});
+                gs.gameProgressiveId, gs.handProgressiveId, gs.session, getCommonCardsLogMessage(gs.commonCards), { tag: gs.handUniqueId });
 
-            yield save({
+            await storage.save({
                 type: 'cards',
                 handId: gs.handUniqueId,
                 session: gs.session,
@@ -123,11 +127,11 @@ exports = module.exports = function* betLoop(gs) {
 
         } else {
 
-            logger.log('debug', 'Hand %d/%d, after the %s session', gs.gameProgressiveId, gs.handProgressiveId, gs.session, {tag: gs.handUniqueId});
-            logger.log('debug', getPlayerStatusLogMessage(gs.players), {tag: gs.handUniqueId});
+            logger.log('debug', 'Hand %d/%d, after the %s session', gs.gameProgressiveId, gs.handProgressiveId, gs.session, { tag: gs.handUniqueId });
+            logger.log('debug', getPlayerStatusLogMessage(gs.players), { tag: gs.handUniqueId });
 
             return void logger.info('Hand %d/%d, betting session is finished.',
-                gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
+                gs.gameProgressiveId, gs.handProgressiveId, { tag: gs.handUniqueId });
         }
 
 

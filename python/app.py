@@ -48,11 +48,11 @@ def get_bot():
         # f = open("r2d2_data.txt", "a+")
         # f.write(',')
         # f.close()
-        return str(bot_methods.good_game(request.json))
+        return str(bot_methods.triton_bot(request.json))
     elif player['id'] == 20:
         return str(bot_methods.RIP_bot(request.json))
     elif player['id'] == 25:
-        return str(bot_methods.the_joker(request.json))
+        return str(bot_methods.full_house(request.json))
     elif player['id'] == "5cc222a8a960de667cfd69b0":
         return str(meep(request.json))
     elif player['id'] == "5cc222b0a960de667cfd69b1":

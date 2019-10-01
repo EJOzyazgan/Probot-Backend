@@ -34,10 +34,10 @@ const gamestate = Object.create(EventEmitter.prototype, {
    */
   [setup_]: {
     writable: process.env.NODE_ENV === 'test',
-    value: function (tournament, players, gameId, mainPlayer) {
+    value: async function (tournament, players, gameId, mainPlayer) {
       const gs = {};
       gs.pid = process.pid;
-      gs.tournamentId = `${tournament.id}`;
+      gs.tournamentId = tournament.id;
       gs.tableType = tournament.tableType;
       gs.config = tournament.config;
       gs.gameProgressiveId = gameId;
@@ -46,12 +46,11 @@ const gamestate = Object.create(EventEmitter.prototype, {
 
       gs.handUniqueId = `${gs.pid}_${gs.tournamentId}_${gs.gameProgressiveId}-${gs.handProgressiveId}`;
 
-
       logger.info('Setup tournament %s.', tournament.id, { tag: gs.handUniqueId });
 
-      gs.players = players.map((p) => {
+      gs.players = await Promise.all(players.map(p => {
         return createPlayer(p, gs)
-      }).filter(x => x != null);
+      }).filter(x => x != null));
 
       Object.defineProperties(gs, {
         'activePlayers': {
@@ -69,43 +68,54 @@ const gamestate = Object.create(EventEmitter.prototype, {
       if (gs.players.length < 3) {
         logger.info('Tournament %s waiting for more players players.', tournament.id, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
-        this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
-        this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
-        gs.players.map(async player => {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: player.totalWinnings }));
+
+        await Promise.all(gs.players.map(async player => {
+
+          await storage.updateBot({ id: player.id, isActive: true});
+
+          // this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true}));
           if (!player.sessionId && player.botType === 'userBot') {
-            await Session.create({
+
+            const session = await Session.create({
               botId: player.id,
               tableType: gs.tableType,
-            }).then(session => {
-              player.sessionId = session.id;
             });
+
+            if (session) {
+              player.sessionId = session.id;
+            }
           }
-        });
+        }));
       }
+
+      await storage.updateTable({ id: tournament.id, numPlayers: gs.players.length });
 
       this[tournaments_].set(tournament.id, gs);
 
       logger.log('debug', 'Tournament players are: %s', gs.players.map(p => p.name).toString().replace(/,/g, ', '), { tag: gs.handUniqueId });
 
       //start the game
-      return void run(gameloop, gs)
-        .then(function () {
+      return void gameloop(gs)
+        .then(async function () {
           logger.info('Tournament %s is just finished.', tournament.id, { tag: gs.handUniqueId });
           this[tournaments_].delete(tournament.id);
           if (gs.tableType === 'sandbox') {
             this.emit('sandbox:update', Object.assign({}, { id: gs.mainPlayer.id, gameCompleted: true }));
           }
           for (let player of gs.players) {
-            this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
+            await storage.updateBot({ id: player.id, isActive: false, totalWinnings: player.totalWinnings });
+            // this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
             if (gs.tableType !== 'sandbox') {
-              this.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
+              await storage.updateUser({ id: player.userId, chips: player.chips });
+              //this.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
             }
-            this.emit('gamestate:end-session', player.sessionId);
+            await storage.endSession(player.sessionId);
+           // this.emit('gamestate:end-session', player.sessionId);
           }
-          this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: 0 }));
+          await storage.updateTable({ id: tournament.id, numPlayers: 0 });
+          //this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: 0 }));
           return this.emit('tournament:completed', { tournamentId: tournament.id });
         }.bind(this))
         .catch(function (err) {
@@ -117,6 +127,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         });
     }
   },
+
 
 
   /**
@@ -161,28 +172,31 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return;
 
       gs.tournamentStatus = tournamentStatus.play;
-      this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
+      
+      //this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
     }
   },
 
   join: {
-    value: function (tournamentId, players) {
+    value: async function (tournamentId, players) {
       const gs = this[tournaments_].get(tournamentId);
 
-      gs.players = gs.players.concat(players.map((p) => {
-        return createPlayer(p, gs)
-      }).filter(x => x != null));
+      gs.players = gs.players.concat(await Promise.all(players.map(p => {
+        return createPlayer(p, gs);
+      }).filter(x => x != null)));
 
       if (gs.players.length < 3) {
         logger.info('Tournament %s waiting for more players players.', tournamentId, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
-        this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
+        //this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
       } else {
         gs.tournamentStatus = tournamentStatus.play;
-        this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
 
-        gs.players.map(async player => {
-          this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true, totalWinnings: player.totalWinnings }));
+        //this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
+
+        await Promise.all(gs.players.map(async player => {
+          await storage.updateBot({ id: player.id, isActive: true});
+          // this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true}));
           if (!player.sessionId && player.botType === 'userBot') {
             await Session.create({
               botId: player.id,
@@ -191,8 +205,10 @@ const gamestate = Object.create(EventEmitter.prototype, {
               player.sessionId = session.id;
             });
           }
-        });
+        }));
       }
+
+      await storage.updateTable({ id: tournamentId, numPlayers: gs.players.length });
     }
   },
 
@@ -258,6 +274,7 @@ gamestate[tournaments_] = new Map();
 
 exports = module.exports = gamestate;
 
+const storage = require('./storage/storage');
 
 const logger = require('./storage/logger');
 

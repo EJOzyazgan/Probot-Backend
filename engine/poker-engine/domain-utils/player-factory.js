@@ -1,6 +1,6 @@
 'use strict';
 const logger = require('../../storage/logger');
-const save = require('../../storage/storage').save;
+const storage = require('../../storage/storage');
 
 const request = require('request');
 const sortByRank = require('poker-rank');
@@ -74,8 +74,7 @@ const actions = {
    *
    * @returns {Promise} a promise resolved when bet data is stored
    */
-  payBet(gs, betAmount) {
-
+  async payBet(gs, betAmount) {
     if (betAmount < 0 && !this.willLeave) {
       this.leave(gs);
     }
@@ -146,7 +145,7 @@ const actions = {
     this[hasTalked_] = true;
     this[update_](gs, betAmount);
 
-    return save({
+    return storage.save({
       type: 'bet',
       handId: gs.handUniqueId,
       session: gs.session,
@@ -174,7 +173,7 @@ const actions = {
     this.status = playerStatus.folded;
 
     logger.log('debug', '%s (%s) has folded.', this.name, this.id, { tag: gs.handUniqueId });
-    return save({
+    return storage.save({
       type: 'status',
       handId: gs.handUniqueId,
       session: gs.session,
@@ -223,105 +222,112 @@ const actions = {
    *
    * @returns {Promise} a promise resolved when the bot service response arrives
    */
-  async talk(gs) {
+  talk(gs) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const state = Object.create(null);
 
-    const state = Object.create(null);
+        // game number of the current tournament
+        state.game = gs.gameProgressiveId;
 
-    // game number of the current tournament
-    state.game = gs.gameProgressiveId;
+        // hand number of the current game
+        state.hand = gs.handProgressiveId;
 
-    // hand number of the current game
-    state.hand = gs.handProgressiveId;
+        // count the number of time
+        // that players had already have the possibility to bet in the current session
+        state.spinCount = gs.spinCount;
 
-    // count the number of time
-    // that players had already have the possibility to bet in the current session
-    state.spinCount = gs.spinCount;
+        // value of the small blinds
+        // ... big blind is always twice
+        state.sb = gs.config.SMALL_BLIND;
 
-    // value of the small blinds
-    // ... big blind is always twice
-    state.sb = gs.config.SMALL_BLIND;
+        // value of the pot, and eventually sidepot.
+        // are updated after each bet
+        state.pot = gs.pot;
+        state.sidepots = gs.sidepots;
 
-    // value of the pot, and eventually sidepot.
-    // are updated after each bet
-    state.pot = gs.pot;
-    state.sidepots = gs.sidepots;
+        state.buyin = this.buyIn;
 
-    state.buyin = this.buyIn;
+        // list of the community cards on the table
+        // ... everyone is able to access this same list
+        state.commonCards = gs.commonCards;
 
-    // list of the community cards on the table
-    // ... everyone is able to access this same list
-    state.commonCards = gs.commonCards;
+        // index of the player with the dealer button
+        state.db = gs.dealerButtonIndex;
 
-    // index of the player with the dealer button
-    state.db = gs.dealerButtonIndex;
+        // amount of chips the current player must bet in order to remain in the game;
+        // it depends by how much he bet previously
+        state.callAmount = Math.max(gs.callAmount - this.chipsBet, 0);
 
-    // amount of chips the current player must bet in order to remain in the game;
-    // it depends by how much he bet previously
-    state.callAmount = Math.max(gs.callAmount - this.chipsBet, 0);
+        // minimum amount the player has to bet
+        // in case he want to raise the call amount for the other players
+        state.minimumRaiseAmount = state.callAmount + (gs.lastRaiseAmount || 2 * gs.config.SMALL_BLIND);
 
-    // minimum amount the player has to bet
-    // in case he want to raise the call amount for the other players
-    state.minimumRaiseAmount = state.callAmount + (gs.lastRaiseAmount || 2 * gs.config.SMALL_BLIND);
-
-    // the list of the players...
-    // make sure that the current players can see only his cards
-    state.players = gs.players.map(function (player) {
-      const cleanPlayer = {
-        id: player.id, name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
-      };
-      if (this.id !== player.id) {
-        return cleanPlayer;
-      }
-      cleanPlayer.cards = player.cards;
-      return cleanPlayer;
-    }, this);
-
-    // index of the player 'this' in the players array
-    state.me = gs.players.findIndex(player => player.id === this.id);
-
-    let history = await Update.findAll({
-      where: {
-        tournamentId: gs.tournamentId,
-        handId: state.hand,
-        gameId: state.game
-      }
-    });
-
-    history = cleanHistory(gs.players[state.me].id, history);
-
-    const requestSettings = {
-      body: { state: state, history: history },
-      json: true,
-      followAllRedirects: true,
-      maxRedirects: 1,
-      timeout: 5000
-    };
-
-    return new Promise((resolve, reject) => {
-      request.post(`${this.serviceUrl}bet`, requestSettings, (err, response, playerBetAmount) => {
-        if (err) {
-          logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err.message, { tag: gs.handUniqueId });
-          if (gs.tableType === 'sandbox') {
-            engine.emit('sandbox:update', Object.assign({},
-              {
-                id: this.id,
-                botConnected: false,
-                gameCompleted: false,
-                botMessage: 'Please make sure bot url is correct'
-              }));
-            engine.emit('gamestate:update-bot', Object.assign({}, { id: this.id, isActive: false }));
-            engine.emit('gamestate:end-session', player.sessionId);
-            engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
-            gs.tournamentStatus = gameStatus.stop;
+        // the list of the players...
+        // make sure that the current players can see only his cards
+        state.players = gs.players.map(function (player) {
+          const cleanPlayer = {
+            id: player.id, name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
+          };
+          if (this.id !== player.id) {
+            return cleanPlayer;
           }
-          return void resolve(0);
-        }
-        engine.emit('sandbox:update', Object.assign({}, { id: this.id, botConnected: true }));
-        logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerBetAmount, { tag: gs.handUniqueId });
-        resolve(sanitizeAmount(playerBetAmount));
-      });
-    });
+          cleanPlayer.cards = player.cards;
+          return cleanPlayer;
+        }, this);
 
+        // index of the player 'this' in the players array
+        state.me = gs.players.findIndex(player => player.id === this.id);
+
+        const history = await Update.findAll({
+          where: {
+            tournamentId: gs.tournamentId,
+            handId: state.hand,
+            gameId: state.game
+          }
+        });
+
+        const cleanHistory = getCleanHistory(gs.players[state.me].id, history);
+
+        const requestSettings = {
+          body: { state: state, history: cleanHistory },
+          json: true,
+          followAllRedirects: true,
+          maxRedirects: 1,
+          timeout: 5000
+        };
+
+        request.post(`${this.serviceUrl}bet`, requestSettings, (err, response, playerBetAmount) => {
+          if (err) {
+            logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err.message, { tag: gs.handUniqueId });
+            if (gs.tableType === 'sandbox') {
+              engine.emit('sandbox:update', Object.assign({},
+                {
+                  id: this.id,
+                  botConnected: false,
+                  gameCompleted: false,
+                  botMessage: 'Please make sure bot url is correct'
+                }));
+
+              storage.updateBot({ id: this.id, isActive: false });
+              //engine.emit('gamestate:update-bot', Object.assign({}, { id: this.id, isActive: false }));
+              storage.endSession(player.sessionId);
+              //engine.emit('gamestate:end-session', player.sessionId);
+              storage.updateTable({ id: gs.tournamentId, numPlayers: gs.players.length });
+              //engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
+              gs.tournamentStatus = gameStatus.stop;
+            }
+            return void resolve(0);
+          }
+          engine.emit('sandbox:update', Object.assign({}, { id: this.id, botConnected: true }));
+          logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerBetAmount, { tag: gs.handUniqueId });
+          resolve(sanitizeAmount(playerBetAmount));
+        });
+      } catch (err) {
+        logger.log('error', `Error talking player id: ${this.id}`, err);
+        resolve(0);
+      }
+    });
   },
 
 
@@ -348,7 +354,7 @@ const actions = {
 
 };
 
-function cleanHistory(id, history) {
+function getCleanHistory(id, history) {
   history.map(update => {
     if (Array.isArray(update.players)) {
       for (let player of update.players) {
@@ -442,54 +448,55 @@ function getBestCombinationCardsLogMessage(cards) {
  *
  * @returns {object|null} the player object created
  */
-exports = module.exports = function factory(obj, gs) {
-  if (!isValidPlayer(obj)) {
-    logger.warn('Registered an attempt to sign an invalid player', obj);
-    return null;
-  }
+exports = module.exports = async function factory(obj, gs) {
+  return new Promise(async resolve => {
+    if (!isValidPlayer(obj)) {
+      logger.warn('Registered an attempt to sign an invalid player', obj);
+      return null;
+    }
 
-  const player = Object.create(actions);
+    const player = Object.create(actions);
 
-  ['name', 'serviceUrl', 'userId']
-    .forEach(prop => Object.defineProperty(player, prop, { value: obj[prop] }));
+    ['name', 'serviceUrl', 'userId']
+      .forEach(prop => Object.defineProperty(player, prop, { value: obj[prop] }));
 
-  // status of the player
-  player.status = playerStatus.active;
+    // status of the player
+    player.status = playerStatus.active;
 
-  player.id = obj.id;
+    player.id = obj.id;
 
-  player.sessionId = null;
+    player.sessionId = null;
 
-  player.willLeave = false;
+    player.willLeave = false;
 
-  player.willJoin = true;
+    player.willJoin = true;
 
-  player.botType = obj.botType;
+    player.botType = obj.botType;
 
-  player.buyIn = obj.buyin ? obj.buyin : (gs.config.MAX_BUYIN + gs.config.MIN_BUYIN) / 2;
+    player.buyIn = obj.buyin ? obj.buyin : (gs.config.MAX_BUYIN + gs.config.MIN_BUYIN) / 2;
 
-  // amount of chips available
-  player.chips = player.buyIn;
+    // amount of chips available
+    player.chips = player.buyIn;
 
-  player.totalWinnings = obj.totalWinnings;
+    player.totalWinnings = obj.totalWinnings;
 
-  // two private cards of the player
-  player.cards = [];
+    // two private cards of the player
+    player.cards = [];
 
-  // total amount of chips the player bet
-  // in the current hand.
-  // it is the sum of the chips the player has bet
-  // in each "betting session" of the current hand.
-  player.chipsBet = 0;
+    // total amount of chips the player bet
+    // in the current hand.
+    // it is the sum of the chips the player has bet
+    // in each "betting session" of the current hand.
+    player.chipsBet = 0;
 
-  if (gs.tableType !== 'sandbox' && player.botType === 'userBot') {
-    engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: (player.chips * -1) }));
-    engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: (player.totalWinnings - obj.buyin) }));
-    player.totalWinnings = player.totalWinnings - obj.buyin;
-  }
+    if (gs.tableType !== 'sandbox' && player.botType === 'userBot') {
+      await storage.updateUser({ id: player.userId, chips: (player.chips * -1) });
+      await storage.updateBot({ id: player.id, totalWinnings: (player.totalWinnings - obj.buyin) });
+      player.totalWinnings = player.totalWinnings - obj.buyin;
+    }
 
-  logger.info('%s (%s), registered as player.', player.name, player.id);
+    logger.info('%s (%s), registered as player.', player.name, player.id);
 
-  return player;
-
+    resolve(player);
+  });
 };

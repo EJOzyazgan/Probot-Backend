@@ -1,7 +1,7 @@
 'use strict';
 
 const logger = require('../storage/logger');
-const save = require('../storage/storage').save;
+const storage = require('../storage/storage');
 
 const gameStatus = require('./domain/tournament-status');
 const playerStatus = require('./domain/player-status');
@@ -15,19 +15,22 @@ const play = require('./bet-loop');
 const engine = require('../index');
 const constants = require('../../config/constants');
 
+const models = require('../../models');
+const Bot = models.Bot;
 
-exports = module.exports = function* dealer(gs) {
+
+exports = module.exports = async function dealer(gs) {
   let config = gs.config;
 
   function sleep(time) {
-    return new Promise(res => setTimeout(res, time));
+    return new Promise(resolve => setTimeout(resolve(true), time));
   }
 
   function waitResume() {
-    return new Promise(function (res, rej) {
+    return new Promise(function (resolve, rej) {
       const time = setInterval(function () {
         if (gs.tournamentStatus === gameStatus.play) {
-          res(clearInterval(time));
+          resolve(clearInterval(time));
         }
       }, 5000);
     });
@@ -39,22 +42,30 @@ exports = module.exports = function* dealer(gs) {
     // break here until the tournament is resumed
     if (gs.tournamentStatus === gameStatus.pause) {
       logger.info('Pause on hand %d/%d', gs.gameProgressiveId, gs.handProgressiveId, {tag: gs.handUniqueId});
-      engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
-      yield waitResume();
+      // await storage.updateTable()
+      //engine.emit('gamestate:update-table', Object.assign({}, {id: gs.tournamentId, numPlayers: gs.players.length}));
+      await waitResume();
     }
 
     const activePlayers = gs.activePlayers;
     const foldedPlayers = gs.players.filter(player => player.status === playerStatus.folded);
 
     if (gs.tableType !== 'sandbox') {
-      gs.players.forEach(player => {
-        engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1, isActive: true, totalWinnings: player.totalWinnings}));
-        engine.emit('gamestate:create-metric', Object.assign({}, {
+      for (let player of gs.players) {
+        await storage.updateBot({id: player.id, handsPlayed: 1, isActive: true});
+        // engine.emit('gamestate:update-bot', Object.assign({}, {id: player.id, handsPlayed: 1, isActive: true, totalWinnings: player.totalWinnings}));
+      
+        await storage.createMetric({
           metricType: constants.HAND_PLAYED,
           value: 1,
-          botId: player.id
-        }));
-      });
+          botId: player.id,
+        });
+        // engine.emit('gamestate:create-metric', Object.assign({}, {
+        //   metricType: constants.HAND_PLAYED,
+        //   value: 1,
+        //   botId: player.id
+        // }));
+      }
     }
 
     // when before a new hand starts,
@@ -92,7 +103,7 @@ exports = module.exports = function* dealer(gs) {
       // warm up
       if (config.WARMUP) {
         if (gs.gameProgressiveId <= config.WARMUP.GAME) {
-          yield sleep(config.WARMUP.WAIT);
+          await sleep(config.WARMUP.WAIT);
         }
       }
 
@@ -110,7 +121,7 @@ exports = module.exports = function* dealer(gs) {
     if (gs.tournamentStatus === gameStatus.play || gs.tournamentStatus === gameStatus.latest) {
 
       if (config.HANDWAIT) {
-        yield sleep(config.HANDWAIT);
+        await sleep(config.HANDWAIT);
       }
 
       // setup the hand:
@@ -119,7 +130,7 @@ exports = module.exports = function* dealer(gs) {
 
       runSetupTasks(gs);
 
-      yield save({
+      await storage.save({
         type: 'setup',
         handId: gs.handUniqueId,
         pot: gs.pot,
@@ -134,13 +145,13 @@ exports = module.exports = function* dealer(gs) {
       // until only one player remains active, or
       // the hand arrive to the "river" session
 
-      yield* play(gs);
+      await play(gs);
 
 
       // find the winner of the hand, eliminated players, ...
       // and updates accordingly the gamestate
 
-      yield* runTeardownTasks(gs);
+      await runTeardownTasks(gs);
 
     }
 
@@ -150,7 +161,8 @@ exports = module.exports = function* dealer(gs) {
     // this info is important to compute the blinds level
 
     if (gs.tableType !== 'sandbox') {
-      engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.PLATFORM_HAND_PLAYED, value: 1}));
+      await storage.createMetric({metricType: constants.PLATFORM_HAND_PLAYED, value: 1});
+      //engine.emit('gamestate:create-metric', Object.assign({}, {metricType: constants.PLATFORM_HAND_PLAYED, value: 1}));
     }
     gs.handProgressiveId++;
 
