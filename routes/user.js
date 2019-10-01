@@ -84,13 +84,14 @@ router.get('/validate/token/:token', async (req, res) => {
           where: {
             referralCode: user.referredBy
           },
-          attributes: ['id', 'chips', 'referralCode', 'username']
+          attributes: ['id', 'chips', 'referralCode', 'username', 'referrals']
         }).then(referralUser => {
           if (referralUser) {
             Friend.create({userId: user.id, friendId: referralUser.id});
             Friend.create({userId: referralUser.id, friendId: user.id});
 
             referralUser.chips += REFERRAL_REWARD;
+            referralUser.referrals++;
             referralUser.save();
           }
         }).catch(err => {
@@ -386,7 +387,8 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
       passwordResetToken: req.body.passwordResetToken,
       passwordResetExpires: req.body.passwordResetExpires,
       isVerified: req.body.isVerified,
-      firstLoggedIn: req.body.firstLoggedIn
+      firstLoggedIn: req.body.firstLoggedIn,
+      numPurchases: req.body.numPurchases,
     }).then(updatedUser => res.status(200).json(updatedUser))
       .catch(error => res.status(400).json({msg: 'Error updating user', error: error})))
     .catch((error) => res.status(400).json({msg: 'Error finding user', error: error}));

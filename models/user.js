@@ -64,6 +64,10 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
+    numPurchases: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
     chips: {
       type: DataTypes.FLOAT,
       defaultValue: parseInt(process.env.STARTING_CHIPS)
@@ -109,6 +113,11 @@ module.exports = (sequalize, DataTypes) => {
   User.associate = models => {
     User.hasMany(models.Friend, {
       as: 'friends',
+      onDelete: 'CASCADE',
+      foreignKey: 'userId'
+    });
+    User.hasMany(models.Purchase, {
+      as: 'purchases',
       onDelete: 'CASCADE',
       foreignKey: 'userId'
     });
