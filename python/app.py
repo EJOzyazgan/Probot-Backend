@@ -52,7 +52,7 @@ def get_bot():
     elif player['id'] == 20:
         return str(bot_methods.RIP_bot(request.json))
     elif player['id'] == 25:
-        return str(bot_methods.the_joker(request.json))
+        return str(bot_methods.full_house(request.json))
     elif player['id'] == "5cc222a8a960de667cfd69b0":
         return str(meep(request.json))
     elif player['id'] == "5cc222b0a960de667cfd69b1":

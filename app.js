@@ -17,7 +17,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http).listen(3030);
 const redis = require('socket.io-redis');
 
-io.adapter(redis({ host: process.env.REDIS_HOST, port: 6379 }));
+// io.adapter(redis({ host: process.env.REDIS_HOST, port: 6379 }));
 
 // const WebSocket = require('ws');
 // const wss = new WebSocket.Server({ port: 8080 });

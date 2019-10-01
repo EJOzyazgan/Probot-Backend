@@ -59,7 +59,7 @@ def RIP_bot(game_state):
     p = gs['players']
     me = p[gs['me']]
 
-    if me['chips'] * 0.2 <= gs['state']['callAmount']:
+    if me['chips'] * 0.2 <= gs['callAmount']:
         return gs['state']['callAmount']
     return me['chips'] * 0.2
 

@@ -26,7 +26,7 @@ const done_ = Symbol('done');
  *
  * @returns {void}
  */
-exports = module.exports = function* asyncFrom(players, startIndex, shouldBreak, callback){
+exports = module.exports = async function asyncFrom(players, startIndex, shouldBreak, callback){
 
   if (callback == null){
     callback = shouldBreak;
@@ -43,7 +43,7 @@ exports = module.exports = function* asyncFrom(players, startIndex, shouldBreak,
       break;
     }
 
-    yield callback(player, nextIndex);
+    await callback(player, nextIndex);
 
     player[done_] = true;
     nextIndex = getNextPlayerIndex(players, nextIndex);

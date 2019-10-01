@@ -64,11 +64,11 @@ engine.on('gamestate:updated', (data, done) => {
 
 let saveUpdates = (data, done) => {
   [, data.tournamentId, data.gameId, data.handId] = data.handId.match(/^[\d]+_([a-z,-\d]+)_([\d]+)-([\d]+)$/i);
-  // let entry = new Update(data);
-  // console.log(data);
+  console.log('IN SAVE');
   Update.create(data)
     .then((update) => {
       app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', { data: update });
+      console.log('SAVED');
       done();
     })
     .catch((error) => {
@@ -91,93 +91,4 @@ let saveGame = (data, done) => {
     });
 };
 
-let updateTable = (data) => {
-  Table.update({
-    numPlayers: data.numPlayers,
-    isActive: data.numPlayers > 1
-  }, {
-    where: {
-      id: data.id
-    }
-  }).then(() => {
 
-  }).catch((err) => {
-    console.log(err);
-  });
-};
-
-let updateUser = (data) => {
-  User.findOne({
-    where: {
-      id: data.id
-    }
-  }).then((user) => {
-    if (data.chips) {
-      user.chips += data.chips;
-    }
-
-    User.update({
-      chips: user.chips,
-    }, {
-      where: {
-        id: user.id
-      }
-    }).then(() => {
-
-    }).catch((err) => {
-      console.log(err);
-    });
-  }).catch((err) => {
-    console.log(err);
-  });
-};
-
-let updateBot = (data) => {
-  Bot.findOne({
-    where: {
-      id: data.id
-    }
-  }).then(bot => {
-    if (data.handsPlayed)
-      bot.handsPlayed += data.handsPlayed;
-    if (data.handsWon)
-      bot.handsWon += data.handsWon;
-    if (data.totalWinnings)
-      bot.totalWinnings = data.totalWinnings;
-    if (data.isActive !== null && data.isActive !== undefined)
-      bot.isActive = data.isActive;
-
-    Bot.update({
-      handsPlayed: bot.handsPlayed,
-      handsWon: bot.handsWon,
-      totalWinnings: bot.totalWinnings,
-      isActive: bot.isActive,
-    }, {
-      where: {
-        id: bot.id
-      }
-    }).then(() => {
-
-    }).catch((err) => {
-      console.log(err);
-    });
-  }).catch((err) => {
-    console.log(err);
-  });
-};
-
-let createMetric = (data) => {
-  Metric.create(data);
-};
-
-let endSession = (id) => {
-  if (id) {
-    Session.update({
-      endedAt: moment().format(),
-    }, {
-      where: {
-        id,
-      }
-    });
-  }
-}
