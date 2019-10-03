@@ -44,11 +44,11 @@ exports = module.exports = async function teardown(gs) {
         botId: player.id
       });
     }
-      // engine.emit('gamestate:create-metric', Object.assign({}, {
-      //   metricType: constants.HAND_WON,
-      //   value: 1,
-      //   botId: player.id
-      // }));
+    // engine.emit('gamestate:create-metric', Object.assign({}, {
+    //   metricType: constants.HAND_WON,
+    //   value: 1,
+    //   botId: player.id
+    // }));
   }
 
   logger.log('debug', getWinsLogMessage(gs.winners), { tag: gs.handUniqueId });
@@ -61,7 +61,6 @@ exports = module.exports = async function teardown(gs) {
       if (player.botType === 'userBot') {
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
         await storage.updateBot({ id: player.id, isActive: false });
-        await storage.createMetric({ metricType: constants.TOTAL_WINNINGS, value: (player.totalWinnings + player.chips), botId: player.id });
         //engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
         await storage.endSession(player.sessionId);
         //engine.emit('gamestate:end-session', player.sessionId);
@@ -70,7 +69,10 @@ exports = module.exports = async function teardown(gs) {
         //   //engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
         // }
         await storage.save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
-        gs.players.splice(i, 1);
+        if (gs.tableType !== 'sandbox') {
+          await storage.createMetric({ metricType: constants.TOTAL_WINNINGS, value: (player.totalWinnings + player.chips), botId: player.id });
+          gs.players.splice(i, 1);
+        }
       } else if (gs.tableType === 'sandbox') {
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
       } else {
