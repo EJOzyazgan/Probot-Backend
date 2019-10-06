@@ -12,6 +12,7 @@ const User = models.User;
 const Bot = models.Bot;
 const Metric = models.Metric;
 const Session = models.Session;
+const SessionUpdates = models.SessionUpdates;
 
 module.exports = {
   save,
@@ -54,6 +55,13 @@ async function saveUpdates(data) {
 
   const update = await Update.create(data);
 
+  for (let player of data.players) {
+    if (player.botType === 'userBot') {
+      await createSessionUpdate(update.id, player.sessionId);
+    }
+  }
+
+
   // if (update) {
   //   app.io.sockets.in(data.tournamentId).emit('gameDataUpdated', { data: update });
   // } else {
@@ -63,13 +71,20 @@ async function saveUpdates(data) {
 
 async function saveGame(data) {
   const game = await Game.create(data);
-
+  // await createSessionUpdate(game.id, data.players);
   // if (game) {
   //   app.io.sockets.in(data.tournamentId).emit('gameOver', { data: game });
   // } else {
   //   logger.log('debug', 'Game update not created');
   // }
 };
+
+async function createSessionUpdate(updateId, sessionId) {
+  await SessionUpdates.create({
+    sessionId,
+    updateId,
+  });
+}
 
 async function updateTable(data) {
   const table = await Table.findOne({

@@ -68,7 +68,7 @@ exports = module.exports = async function teardown(gs) {
         //   await storage.updateUser({ id: player.userId, });
         //   //engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
         // }
-        await storage.save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out });
+        await storage.save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out, players: gs.players });
         if (gs.tableType !== 'sandbox') {
           await storage.createMetric({ metricType: constants.TOTAL_WINNINGS, value: (player.totalWinnings + player.chips), botId: player.id });
           gs.players.splice(i, 1);

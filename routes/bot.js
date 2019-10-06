@@ -6,6 +6,7 @@ const Bot = models.Bot;
 const Update = models.Update;
 const User = models.User;
 const Session = models.Session;
+const SessionUpdates = models.SessionUpdates;
 const moment = require('moment');
 const Op = require('sequelize').Op;
 
@@ -102,41 +103,11 @@ router.patch('/patch/:id', passport.authenticate('jwt', { session: false }), (re
 // });
 
 router.post('/get/data/clean', passport.authenticate('jwt', { session: false }), async (req, res) => {
-  Update.findAll({
-    where: {
-      createdAt: {
-        [Op.gte]: req.body.createdAt,
-        [Op.lte]: req.body.endedAt,
-      },
-    },
-    attributes: {
-      exclude: ['id', 'updatedAt']
-    },
-    order: [['createdAt', 'ASC']],
-  }).then(updates => {
-    return res.status(200).send(cleanHistory(req.body.botId, updates));
-  }).catch(err => {
-    return res.status(400).json({ msg: 'Error getting data', error: err });
-  });
+  await getData(true, res, req.body);
 });
 
 router.post('/get/data', passport.authenticate('jwt', { session: false }), async (req, res) => {
-  Update.findAll({
-    where: {
-      createdAt: {
-        [Op.gte]: req.body.createdAt,
-        [Op.lte]: req.body.endedAt,
-      },
-    },
-    attributes: {
-      exclude: ['id', 'updatedAt']
-    },
-    order: [['createdAt', 'ASC']],
-  }).then(updates => {
-    return res.status(200).send(updates);
-  }).catch(err => {
-    return res.status(400).json({ msg: 'Error getting data', error: err });
-  });
+  await getData(false, res, req.body);
 });
 
 router.get('/get/sessions/:botId', passport.authenticate('jwt', { session: false }), async (req, res) => {
@@ -173,6 +144,39 @@ router.get('/get/sessions/:botId', passport.authenticate('jwt', { session: false
 //         res.status(200).send("Bots Tournaments Cleared");
 //     });
 // });
+
+async function getData(clean, res, session) {
+  try {
+    const sessionUpdates = await SessionUpdates.findAll({
+      where: { sessionId: session.id }
+    });
+
+    let updateIds = [];
+    for (sessionUpdate of sessionUpdates) {
+      updateIds.push(sessionUpdate.updateId);
+    }
+
+    const updates = await Update.findAll({
+      where: {
+        id: {
+          [Op.in]: updateIds,
+        },
+      },
+      attributes: {
+        exclude: ['id', 'updatedAt']
+      },
+      order: [['createdAt', 'ASC']],
+    })
+
+    if (clean) {
+      return res.status(200).send(cleanHistory(session.botId, updates));
+    }
+    return res.status(200).send(updates);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).json({ msg: 'Error getting data', error: err });
+  }
+}
 
 function cleanHistory(id, history) {
   history.map(update => {

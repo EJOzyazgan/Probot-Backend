@@ -16,5 +16,13 @@ module.exports = (sequalize, DataTypes) => {
     },
   });
 
+  Session.associate = models => {
+    Session.hasMany(models.SessionUpdates, {
+      as: 'sessionUpdates',
+      onDelete: 'CASCADE',
+      foreignKey: 'sessionId'
+    });
+  };
+
   return Session;
 };
