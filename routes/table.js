@@ -85,7 +85,7 @@ router.post('/join', passport.authenticate('jwt', { session: false }), async (re
     req.body.bot.buyin = req.body.buyin;
     for (let i = 1; i < 6; i++) {
       for (let table of tables) {
-        if (table.numPlayers === i) {
+        if (table.numPlayers === i && req.body.bot.currentTables.indexOf(table.id) < 0) {
           engine.join(table.id, [req.body.bot]);
           return res.status(200).json({ msg: 'Joined Table' });
         }

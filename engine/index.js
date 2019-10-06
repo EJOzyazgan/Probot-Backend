@@ -72,8 +72,13 @@ const gamestate = Object.create(EventEmitter.prototype, {
         gs.tournamentStatus = tournamentStatus.play;
 
         await Promise.all(gs.players.map(async player => {
+          const data = { id: player.id, isActive: true };
 
-          await storage.updateBot({ id: player.id, isActive: true});
+          if (player.botType === 'userBot' && gs.tableType !== 'sandbox') {
+            data.joinTable = gs.tournamentId;
+          }
+
+          await storage.updateBot(data);
 
           // this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true}));
           if (!player.sessionId && player.botType === 'userBot') {
@@ -105,17 +110,13 @@ const gamestate = Object.create(EventEmitter.prototype, {
             this.emit('sandbox:update', Object.assign({}, { id: gs.mainPlayer.id, gameCompleted: true }));
           }
           for (let player of gs.players) {
-            await storage.updateBot({ id: player.id, isActive: false, totalWinnings: player.totalWinnings });
-            // this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
+            await storage.updateBot({ id: player.id, isActive: false, totalWinnings: player.totalWinnings, leaveTable: gs.tournamentId });
             if (gs.tableType !== 'sandbox') {
               await storage.updateUser({ id: player.userId, chips: player.chips });
-              //this.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
             }
             await storage.endSession(player.sessionId);
-           // this.emit('gamestate:end-session', player.sessionId);
           }
           await storage.updateTable({ id: tournament.id, numPlayers: 0 });
-          //this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: 0 }));
           return this.emit('tournament:completed', { tournamentId: tournament.id });
         }.bind(this))
         .catch(function (err) {
@@ -172,7 +173,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         return;
 
       gs.tournamentStatus = tournamentStatus.play;
-      
+
       //this.emit('gamestate:update-table', Object.assign({}, { id: tournament.id, numPlayers: gs.players.length }));
     }
   },
@@ -195,15 +196,24 @@ const gamestate = Object.create(EventEmitter.prototype, {
         //this.emit('gamestate:update-table', Object.assign({}, { id: tournamentId, numPlayers: gs.players.length }));
 
         await Promise.all(gs.players.map(async player => {
-          await storage.updateBot({ id: player.id, isActive: true});
-          // this.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: true}));
+          const data = { id: player.id, isActive: true };
+
+          if (player.botType === 'userBot' && gs.tableType !== 'sandbox') {
+            data.joinTable = gs.tournamentId;
+          }
+
+          await storage.updateBot(data);
+
           if (!player.sessionId && player.botType === 'userBot') {
-            await Session.create({
+
+            const session = await Session.create({
               botId: player.id,
               tableType: gs.tableType,
-            }).then(session => {
-              player.sessionId = session.id;
             });
+
+            if (session) {
+              player.sessionId = session.id;
+            }
           }
         }));
       }

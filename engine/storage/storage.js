@@ -129,20 +129,18 @@ async function updateBot(data) {
     },
   });
 
-  if (bot) {
-    if (data.handsPlayed)
-      bot.handsPlayed += data.handsPlayed;
-    if (data.handsWon)
-      bot.handsWon += data.handsWon;
-    if (data.totalWinnings)
-      bot.totalWinnings = data.totalWinnings;
-    if (data.isActive !== null && data.isActive !== undefined)
-      bot.isActive = data.isActive;
-  } else {
-    logger.log('debug', 'No Bot found with id: %s', data.id);
-  }
+  if (data.joinTable)
+    bot.currentTables.push(data.joinTable);
+  else if (data.leaveTable)
+    bot.currentTables.splice(bot.currentTables.indexOf(data.leaveTable), 1);
 
-  await bot.save();
+  await bot.update({
+    handsPlayed: data.handsPlayed ? bot.handsPlayed += data.handsPlayed : bot.handsPlayed,
+    handsWon: data.handsWon ? bot.handsWon += data.handsWon : bot.handsWon,
+    totalWinnings: data.totalWinnings ? data.totalWinnings : bot.totalWinnings,
+    isActive: data.isActive !== undefined && data.isActive !== null ? data.isActive : bot.isActive,
+    currentTables: bot.currentTables,
+  });
 }
 
 async function createMetric(data) {

@@ -31,7 +31,7 @@ exports = module.exports = async function resetGamestate(gs) {
   gs.players = gs.players.filter(async (player, i) => {
     if (player.willLeave && gs.tableType !== 'sandbox' && player.botType === 'userBot') {
       player.totalWinnings += player.chips;
-      await storage.updateBot({ id: player.id, totalWinnings: (player.totalWinnings + player.chips), isActive: false });
+      await storage.updateBot({ id: player.id, totalWinnings: (player.totalWinnings + player.chips), isActive: false, leaveTable: gs.tournamentId });
       //engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, totalWinnings: player.totalWinnings, isActive: false }));
       await storage.updateUser({ id: player.userId, chips: player.chips });
       //engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
