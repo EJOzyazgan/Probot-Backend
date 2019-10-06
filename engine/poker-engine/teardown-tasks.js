@@ -60,14 +60,8 @@ exports = module.exports = async function teardown(gs) {
     if (player.chips <= 0) {
       if (player.botType === 'userBot') {
         logger.info('%s (%s) is out', player.name, player.id, { tag: gs.handUniqueId });
-        await storage.updateBot({ id: player.id, isActive: false });
-        //engine.emit('gamestate:update-bot', Object.assign({}, { id: player.id, isActive: false, totalWinnings: player.totalWinnings }));
+        await storage.updateBot({ id: player.id, isActive: false, leaveTable: gs.tournamentId });
         await storage.endSession(player.sessionId);
-        //engine.emit('gamestate:end-session', player.sessionId);
-        // if (gs.tableType !== 'sandbox') {
-        //   await storage.updateUser({ id: player.userId, });
-        //   //engine.emit('gamestate:update-user', Object.assign({}, { id: player.userId, chips: player.chips }));
-        // }
         await storage.save({ type: 'status', handId: gs.handUniqueId, playerId: player.id, status: playerStatus.out, players: gs.players });
         if (gs.tableType !== 'sandbox') {
           await storage.createMetric({ metricType: constants.TOTAL_WINNINGS, value: (player.totalWinnings + player.chips), botId: player.id });

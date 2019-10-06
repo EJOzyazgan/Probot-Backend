@@ -45,9 +45,9 @@ module.exports = (sequalize, DataTypes) => {
       type: DataTypes.DATE,
       defaultValue: null
     },
-    currentTable: {
-      type: DataTypes.STRING,
-      defaultValue: null
+    currentTables: {
+      type: DataTypes.ARRAY(DataTypes.INTEGER),
+      defaultValue: []
     },
     tablesPlayed: {
       type: DataTypes.ARRAY(DataTypes.STRING),

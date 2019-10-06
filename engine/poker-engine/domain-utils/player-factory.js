@@ -310,11 +310,8 @@ const actions = {
                 }));
 
               storage.updateBot({ id: this.id, isActive: false });
-              //engine.emit('gamestate:update-bot', Object.assign({}, { id: this.id, isActive: false }));
               storage.endSession(player.sessionId);
-              //engine.emit('gamestate:end-session', player.sessionId);
               storage.updateTable({ id: gs.tournamentId, numPlayers: gs.players.length });
-              //engine.emit('gamestate:update-table', Object.assign({}, { id: gs.tournamentId, numPlayers: gs.players.length }));
               gs.tournamentStatus = gameStatus.stop;
             }
             return void resolve(0);
