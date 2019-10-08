@@ -87,7 +87,18 @@ router.get('/top-players', passport.authenticate('jwt', { session: false }), asy
     attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
     limit: 100,
   }).then(topPlayers => {
-    if (topPlayers.length >= 99) {
+    if (topPlayers.length >= 100) {
+      let nonZeroIndex = 0;
+
+      for (let i = 0; i < topPlayers.length; i++) {
+        if (topPlayers[i].rank > 0) {
+          nonZeroIndex = i;
+          break;
+        }
+      }
+
+      const zeroRank = topPlayers.splice(0, nonZeroIndex);
+      topPlayers = topPlayers.concat(zeroRank);
 
       res.status(200).send(topPlayers)
     } else {

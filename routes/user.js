@@ -35,11 +35,11 @@ router.post('/create', async (req, res) => {
       return res.status(200).json(user)
     })
     .catch((error) => {
-      return res.status(400).json({msg: 'Error creating user', error: error});
+      return res.status(400).json({ msg: 'Error creating user', error: error });
     });
 });
 
-router.get('/referral/:email', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/referral/:email', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id
@@ -47,9 +47,9 @@ router.get('/referral/:email', passport.authenticate('jwt', {session: false}), a
     attributes: ['username', 'referralCode', 'email']
   }).then(user => {
     emailController.sendReferral(`http:\/\/probotplayground.com\/#\/auth\/signup\/${user.referralCode}`, req.params.email, user.username, REFERRAL_REWARD, user.email);
-    res.status(200).json({msg: 'Referral link sent!'});
+    res.status(200).json({ msg: 'Referral link sent!' });
   }).catch(err => {
-    return res.status(400).json({msg: 'Error finding user', error: err});
+    return res.status(400).json({ msg: 'Error finding user', error: err });
   })
 });
 
@@ -60,8 +60,8 @@ router.get('/validate/token/:token', async (req, res) => {
     }
   }).then(token => {
     if (!token || moment(token.tokenExpires).diff(moment()) < 0) {
-      Token.destroy({where: {id: token.id}});
-      return res.status(401).json({msg: 'Not a valid token'})
+      Token.destroy({ where: { id: token.id } });
+      return res.status(401).json({ msg: 'Not a valid token' })
     }
 
     User.findOne({
@@ -71,7 +71,7 @@ router.get('/validate/token/:token', async (req, res) => {
       attributes: ['id', 'isVerified', 'referredBy', 'chips', 'referralCode', 'username', 'email']
     }).then(user => {
       if (!user) {
-        return res.status(400).json({msg: 'Unable to find user'});
+        return res.status(400).json({ msg: 'Unable to find user' });
       }
 
       user.isVerified = true;
@@ -87,8 +87,8 @@ router.get('/validate/token/:token', async (req, res) => {
           attributes: ['id', 'chips', 'referralCode', 'username', 'referrals']
         }).then(referralUser => {
           if (referralUser) {
-            Friend.create({userId: user.id, friendId: referralUser.id});
-            Friend.create({userId: referralUser.id, friendId: user.id});
+            Friend.create({ userId: user.id, friendId: referralUser.id });
+            Friend.create({ userId: referralUser.id, friendId: user.id });
 
             referralUser.chips += REFERRAL_REWARD;
             referralUser.referrals++;
@@ -96,30 +96,30 @@ router.get('/validate/token/:token', async (req, res) => {
           }
         }).catch(err => {
           console.log(err);
-          return res.status(400).json({msg: 'Error finding referral user', error: err});
+          return res.status(400).json({ msg: 'Error finding referral user', error: err });
         })
       }
 
       user.save().then(savedUser => {
         if (!savedUser) {
-          return res.status(400).json({msg: 'Unable to update user'})
+          return res.status(400).json({ msg: 'Unable to update user' })
         }
 
-        Token.destroy({where: {id: token.id}});
+        Token.destroy({ where: { id: token.id } });
 
-        return res.status(200).json({msg: 'User verified'})
+        return res.status(200).json({ msg: 'User verified' })
       }).catch(err => {
-        return res.status(400).json({msg: 'Unable to update user', error: err})
+        return res.status(400).json({ msg: 'Unable to update user', error: err })
       });
     }).catch(err => {
-      return res.status(400).json({msg: 'Unable to find user', error: err})
+      return res.status(400).json({ msg: 'Unable to find user', error: err })
     });
   }).catch(err => {
-    return res.status(400).json({msg: 'Unable to find token', error: err})
+    return res.status(400).json({ msg: 'Unable to find token', error: err })
   });
 });
 
-router.get('/validate/reset-password/', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/validate/reset-password/', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id
@@ -127,11 +127,11 @@ router.get('/validate/reset-password/', passport.authenticate('jwt', {session: f
     attributes: ['id']
   }).then((user) => {
     if (!user) {
-      return res.status(401).json({msg: 'Valid user not found'});
+      return res.status(401).json({ msg: 'Valid user not found' });
     }
     return res.status(200).json(user);
   }).catch((e) => {
-    res.status(400).json({msg: 'Error finding user', error: e});
+    res.status(400).json({ msg: 'Error finding user', error: e });
   });
 });
 
@@ -142,10 +142,10 @@ router.get('/reset-password/:email', async (req, res) => {
     }
   }).then(user => {
     if (!user) {
-      return res.status(200).json({msg: 'User with that email not found'})
+      return res.status(200).json({ msg: 'User with that email not found' })
     }
 
-    const token = jwt.sign({id: user.id}, privateKey, {
+    const token = jwt.sign({ id: user.id }, privateKey, {
       algorithm: 'RS256',
       expiresIn: '1h'
     });
@@ -155,20 +155,20 @@ router.get('/reset-password/:email', async (req, res) => {
     jwt.verify(token, publicKey, function (err, data) {
       if (err) {
         error = true;
-        return res.status(400).send({success: false, msg: 'Error reset password email token'});
+        return res.status(400).send({ success: false, msg: 'Error reset password email token' });
       }
     });
 
     if (!error) {
       emailController.sendResetPassword(`http:\/\/probotplayground.com\/#\/auth\/reset-password\/${token}`, req.params.email, user.username);
-      return res.status(200).json({msg: 'Reset password email sent'});
+      return res.status(200).json({ msg: 'Reset password email sent' });
     }
   }).catch(error => {
 
   });
 });
 
-router.get('/add/friend/:email', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/add/friend/:email', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id
@@ -181,12 +181,12 @@ router.get('/add/friend/:email', passport.authenticate('jwt', {session: false}),
       }
     }).then(friend => {
       emailController.sendFriendInvite(`http:\/\/probotplayground.com\/#\/auth\/friend-request\/${user.referralCode}\/${friend.referralCode}`, friend.email, friend.username, user.username, user.email);
-      res.status(200).json({msg: 'Friend request sent!'});
+      res.status(200).json({ msg: 'Friend request sent!' });
     }).catch(err => {
-      return res.status(400).json({msg: 'Error finding user', error: err});
+      return res.status(400).json({ msg: 'Error finding user', error: err });
     });
   }).catch(err => {
-    return res.status(400).json({msg: 'Error finding user', error: err});
+    return res.status(400).json({ msg: 'Error finding user', error: err });
   });
 });
 
@@ -201,15 +201,15 @@ router.get('/accept/friend-request/:userReferral/:friendReferral', async (req, r
   }).then(users => {
     console.log(users);
     if (users.length === 2) {
-      Friend.create({userId: users[0].id, friendId: users[1].id});
-      Friend.create({userId: users[1].id, friendId: users[0].id});
-      return res.status(200).json({msg: 'Friend request accepted'});
+      Friend.create({ userId: users[0].id, friendId: users[1].id });
+      Friend.create({ userId: users[1].id, friendId: users[0].id });
+      return res.status(200).json({ msg: 'Friend request accepted' });
     }
-    return res.status(200).json({msg: 'Not enough users found'});
-  }).catch(err => rea.status(400).json({msg: 'Error accepting friend request', error: err}));
+    return res.status(200).json({ msg: 'Not enough users found' });
+  }).catch(err => rea.status(400).json({ msg: 'Error accepting friend request', error: err }));
 });
 
-router.post('/get/friends', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/get/friends', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findAll({
     where: {
       id: {
@@ -218,11 +218,24 @@ router.post('/get/friends', passport.authenticate('jwt', {session: false}), asyn
     },
     order: [['rank', 'ASC']],
     attributes: ['id', 'username', 'icon', 'rank', 'rankClass'],
-  }).then(friends => res.status(200).send(friends))
-    .catch(err => {
-      console.log(err);
-      res.status(400).json({msg: 'Error getting friends', error: err});
-    });
+  }).then(friends => {
+    let nonZeroIndex = 0;
+
+    for(let i = 0; i < friends.length; i++) {
+      if (friends[i].rank > 0) {
+        nonZeroIndex = i;
+        break;
+      }
+    }
+
+    const zeroRank = friends.splice(0, nonZeroIndex);
+    friends =  friends.concat(zeroRank);
+
+    res.status(200).send(friends)
+  }).catch(err => {
+    console.log(err);
+    res.status(400).json({ msg: 'Error getting friends', error: err });
+  });
 });
 
 router.post('/login', async (req, res, next) => {
@@ -245,7 +258,7 @@ router.post('/login', async (req, res, next) => {
       let error = false;
 
       if (isMatch && !err) {
-        const token = jwt.sign({id: user.id}, privateKey, {
+        const token = jwt.sign({ id: user.id }, privateKey, {
           algorithm: 'RS256',
           expiresIn: '15m'
         });
@@ -253,7 +266,7 @@ router.post('/login', async (req, res, next) => {
         jwt.verify(token, publicKey, function (err, data) {
           if (err) {
             error = true;
-            return res.status(400).send({success: false, msg: 'Error logging in'});
+            return res.status(400).send({ success: false, msg: 'Error logging in' });
           }
         });
 
@@ -269,7 +282,7 @@ router.post('/login', async (req, res, next) => {
           });
         }
       } else {
-        return res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
+        return res.status(400).send({ success: false, msg: 'Authentication failed. Wrong password.' });
       }
     })
   }).catch((error) => res.status(400).send(error));
@@ -289,7 +302,7 @@ router.get('/refresh-token/:refreshToken', async (req, res) => {
 
     let error = false;
 
-    const token = jwt.sign({id: user.id}, privateKey, {
+    const token = jwt.sign({ id: user.id }, privateKey, {
       algorithm: 'RS256',
       expiresIn: '15m'
     });
@@ -297,7 +310,7 @@ router.get('/refresh-token/:refreshToken', async (req, res) => {
     jwt.verify(token, publicKey, function (err, data) {
       if (err) {
         error = true;
-        return res.status(400).send({success: false, msg: 'Error logging in'});
+        return res.status(400).send({ success: false, msg: 'Error logging in' });
       }
     });
 
@@ -311,7 +324,7 @@ router.get('/refresh-token/:refreshToken', async (req, res) => {
         refreshToken: user.refreshToken
       });
     }
-    return res.status(400).send({success: false, msg: 'Authentication failed. Wrong password.'});
+    return res.status(400).send({ success: false, msg: 'Authentication failed. Wrong password.' });
   }).catch((error) => res.status(400).send(error));
 });
 
@@ -344,15 +357,15 @@ router.post('/exists', async (req, res) => {
       msg: 'Username already used',
     });
 
-  }).catch((error) => res.status(400).json({msg: 'Error finding account', error: error}));
+  }).catch((error) => res.status(400).json({ msg: 'Error finding account', error: error }));
 });
 
-router.get('/get', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/get', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id
     },
-    attributes: {exclude: ['password']},
+    attributes: { exclude: ['password'] },
     include: [{
       as: 'friends',
       model: models.Friend,
@@ -361,11 +374,11 @@ router.get('/get', passport.authenticate('jwt', {session: false}), async (req, r
   }).then((user) => {
     return res.status(200).json(user);
   }).catch((err) => {
-    return res.status(400).json({msg: 'Error finding user', error: err});
+    return res.status(400).json({ msg: 'Error finding user', error: err });
   });
 });
 
-router.patch('/patch', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.patch('/patch', passport.authenticate('jwt', { session: false }), async (req, res) => {
   User.findOne({
     where: {
       id: req.user.dataValues.id
@@ -390,17 +403,17 @@ router.patch('/patch', passport.authenticate('jwt', {session: false}), async (re
       firstLoggedIn: req.body.firstLoggedIn,
       numPurchases: req.body.numPurchases,
     }).then(updatedUser => res.status(200).json(updatedUser))
-      .catch(error => res.status(400).json({msg: 'Error updating user', error: error})))
-    .catch((error) => res.status(400).json({msg: 'Error finding user', error: error}));
+      .catch(error => res.status(400).json({ msg: 'Error updating user', error: error })))
+    .catch((error) => res.status(400).json({ msg: 'Error finding user', error: error }));
 });
 
-router.post('/support', passport.authenticate('jwt', {session: false}), async (req, res) => {
-  const {email, name, message} = req.body;
+router.post('/support', passport.authenticate('jwt', { session: false }), async (req, res) => {
+  const { email, name, message } = req.body;
   try {
     await emailController.sendSupport(email, name, message);
-    res.status(200).json({msg: 'Support contacted.'})
+    res.status(200).json({ msg: 'Support contacted.' })
   } catch (error) {
-    res.stats(400).json({msg: 'Error contacting support.', error: error})
+    res.stats(400).json({ msg: 'Error contacting support.', error: error })
   }
 });
 
