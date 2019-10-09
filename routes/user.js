@@ -53,6 +53,31 @@ router.get('/referral/:email', passport.authenticate('jwt', { session: false }),
   })
 });
 
+router.get('/validate/send/:email', async (req, res) => {
+  User.findOne({
+    where: {
+      email: req.params.email,
+    },
+  }).then(async (user) => {
+    if (user) {
+      if (user.isVerified) {
+        return res.status(200).json({msg: 'Account already verified'});
+      }
+      const token = await Token.create({
+        userId: user.id,
+        token: crypto.randomBytes(16).toString('hex'),
+        tokenExpires: moment().add(1, 'hour').format()
+      });
+
+      emailController.sendAccountVerification(`http:\/\/probotplayground.com\/#\/auth\/email-verification\/${token.token}`, user.email, user.username);
+      return res.status(200).json(user)
+    }
+    return res.status(200).json({ msg: 'Account not found' });
+  }).catch((error) => {
+    return res.status(400).json({ msg: 'Error finding user', error: error });
+  });
+});
+
 router.get('/validate/token/:token', async (req, res) => {
   Token.findOne({
     where: {
@@ -221,7 +246,7 @@ router.post('/get/friends', passport.authenticate('jwt', { session: false }), as
   }).then(friends => {
     let nonZeroIndex = 0;
 
-    for(let i = 0; i < friends.length; i++) {
+    for (let i = 0; i < friends.length; i++) {
       if (friends[i].rank > 0) {
         nonZeroIndex = i;
         break;
@@ -229,7 +254,7 @@ router.post('/get/friends', passport.authenticate('jwt', { session: false }), as
     }
 
     const zeroRank = friends.splice(0, nonZeroIndex);
-    friends =  friends.concat(zeroRank);
+    friends = friends.concat(zeroRank);
 
     res.status(200).send(friends)
   }).catch(err => {
