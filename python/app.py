@@ -13,75 +13,63 @@ from .scl002_all_in_every_time import all_in
 app = Flask(__name__)
 
 
-@app.route("/bet", methods=['POST'])
-def get_bot():
-    player = request.json['state']['players'][request.json['state']['me']]
+@app.route("/1/bet", methods=['POST'])
+def get_bot1():
+    # with open("ariel_data.txt", "a+") as outfile:
+    #     json.dump(request.json, outfile)
+    #
+    # f = open("ariel_data.txt", "a+")
+    # f.write(',')
+    # f.close()
+    return str(dummy_bot(request.json))
+   
 
-    if player['id'] == 22:
-        # with open("ariel_data.txt", "a+") as outfile:
-        #     json.dump(request.json, outfile)
-        #
-        # f = open("ariel_data.txt", "a+")
-        # f.write(',')
-        # f.close()
-        return str(bot_methods.parzival(request.json))
-    elif player['id'] == 21:
-        # with open("bender_data.txt", "a+") as outfile:
-        #     json.dump(request.json, outfile)
-        #
-        # f = open("bender_data.txt", "a+")
-        # f.write(',')
-        # f.close()
-        return str(bot_methods.one_hit_wonder(request.json))
-    elif player['id'] == 24:
-        # with open("marvin_data.txt", "a+") as outfile:
-        #     json.dump(request.json, outfile)
-        #
-        # f = open("marvin_data.txt", "a+")
-        # f.write(',')
-        # f.close()
-        return str(bot_methods.mastermind(request.json))
-    elif player['id'] == 29:
-        # with open("r2d2_data.txt", "a+") as outfile:
-        #     json.dump(request.json, outfile)
-        #
-        # f = open("r2d2_data.txt", "a+")
-        # f.write(',')
-        # f.close()
-        return str(bot_methods.triton_bot(request.json))
-    elif player['id'] == 20:
-        return str(bot_methods.RIP_bot(request.json))
-    elif player['id'] == 25:
-        return str(bot_methods.full_house(request.json))
-    elif player['id'] == "5cc222a8a960de667cfd69b0":
-        return str(meep(request.json))
-    elif player['id'] == "5cc222b0a960de667cfd69b1":
-        return str(dummy_bot(request.json))
-    elif player['id'] == "5cc222baa960de667cfd69b2":
-        return str(potential(request.json))
-    elif player['id'] == "5cc4881ba960de667cfd69b3":
-        return str(all_in(request.json))
-    elif player['id'] == "5cc49113a960de667cfd69b4":
-        return str(bot_methods.RIP_bot(request.json))
-    elif player['id'] == "5cc491f5a960de667cfd69b5":
-        return str(bot_methods.ggez(request.json))
-    elif player['id'] == "5cc492b0a960de667cfd69b6":
-        return str(bot_methods.cash_machine(request.json))
-    elif player['id'] == "5cc492b7a960de667cfd69b7":
-        return str(bot_methods.the_joker(request.json))
-    elif player['id'] == "5cc492c5a960de667cfd69b8":
-        return str(bot_methods.full_house(request.json))
-    elif player['id'] == "5cc492d7a960de667cfd69b9":
-        return str(bot_methods.queen_of_hearts(request.json))
-    elif player['id'] == "5cc492dfa960de667cfd69ba":
-        return str(bot_methods.ace_bot(request.json))
-    elif player['id'] == "5cc49406a960de667cfd69bb":
-        return str(bot_methods.triton_bot(request.json))
-    elif player['id'] == "5cc49412a960de667cfd69bc":
-        return str(bot_methods.uc_my_cards(request.json))
-    elif player['id'] == "5cc4941aa960de667cfd69bd":
-        return str(bot_methods.deez_botz(request.json))
-    elif player['id'] == "5c7b86475898d33c8000f05d":
-        return print(str(bot_methods.leave_bot(request.json)))
+@app.route("/2/bet", methods=['POST'])
+def get_bot2():
+    # with open("ariel_data.txt", "a+") as outfile:
+    #     json.dump(request.json, outfile)
+    #
+    # f = open("ariel_data.txt", "a+")
+    # f.write(',')
+    # f.close()
+    return str(robocop(request.json))
 
-    return str(0)
+@app.route("/3/bet", methods=['POST'])
+def get_bot3():
+    # with open("ariel_data.txt", "a+") as outfile:
+    #     json.dump(request.json, outfile)
+    #
+    # f = open("ariel_data.txt", "a+")
+    # f.write(',')
+    # f.close()
+    return str(dummy_bot(request.json))
+
+@app.route("/4/bet", methods=['POST'])
+def get_bot4():
+    # with open("ariel_data.txt", "a+") as outfile:
+    #     json.dump(request.json, outfile)
+    #
+    # f = open("ariel_data.txt", "a+")
+    # f.write(',')
+    # f.close()
+    return str(bot_methods.triton_bot(request.json))
+
+@app.route("/5/bet", methods=['POST'])
+def get_bot5():
+    # with open("ariel_data.txt", "a+") as outfile:
+    #     json.dump(request.json, outfile)
+    #
+    # f = open("ariel_data.txt", "a+")
+    # f.write(',')
+    # f.close()
+    return str(bot_methods.mastermind(request.json))
+
+@app.route("/6/bet", methods=['POST'])
+def get_bot6():
+    # with open("ariel_data.txt", "a+") as outfile:
+    #     json.dump(request.json, outfile)
+    #
+    # f = open("ariel_data.txt", "a+")
+    # f.write(',')
+    # f.close()
+    return str(bot_methods.RIP_bot(request.json))

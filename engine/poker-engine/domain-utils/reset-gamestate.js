@@ -67,7 +67,7 @@ exports = module.exports = async function resetGamestate(gs) {
 
   });
 
-  if (gs.players.length < 3) {
+  if (gs.players.length < 3 && gs.tableType !== 'sandbox') {
     logger.info('Tournament %s waiting for more players players.', gs.tournamentId, { tag: gs.handUniqueId });
     gs.tournamentStatus = tournamentStatus.pause;
   } else {

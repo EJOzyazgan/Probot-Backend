@@ -21,6 +21,7 @@ module.exports = {
   updateUser,
   createMetric,
   endSession,
+  deleteSession,
 }
 
 async function save(updates) {
@@ -80,10 +81,18 @@ async function saveGame(data) {
 };
 
 async function createSessionUpdate(updateId, sessionId) {
-  await SessionUpdates.create({
-    sessionId,
-    updateId,
-  });
+  const session = await Session.findOne({
+    where: {
+      id: sessionId,
+    },
+  })
+
+  if (session) {
+    await SessionUpdates.create({
+      sessionId,
+      updateId,
+    });
+  }
 }
 
 async function updateTable(data) {
@@ -163,5 +172,15 @@ async function endSession(id) {
     }
 
     await session.save();
+  }
+}
+
+async function deleteSession(id) {
+  if (id) {
+    await Session.destroy({
+      where: {
+        id,
+      },
+    });
   }
 }
