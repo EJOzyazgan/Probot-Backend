@@ -60,7 +60,7 @@ def RIP_bot(game_state):
     me = p[gs['me']]
 
     if me['chips'] * 0.2 <= gs['callAmount']:
-        return gs['state']['callAmount']
+        return gs['callAmount']
     return me['chips'] * 0.2
 
 
@@ -95,11 +95,11 @@ def the_joker(game_state):
 
 
 def full_house(game_state):
-    return game_state['minimumRaiseAmount']
+    return game_state['state']['minimumRaiseAmount']
 
 
 def queen_of_hearts(game_state):
-    return game_state['minimumRaiseAmount'] * 1.25
+    return game_state['state']['minimumRaiseAmount'] * 1.25
 
 
 def ace_bot(game_state):

@@ -65,7 +65,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         }
       });
 
-      if (gs.players.length < 3) {
+      if (gs.players.length < 3 && gs.tableType !== 'sandbox') {
         logger.info('Tournament %s waiting for more players players.', tournament.id, { tag: gs.handUniqueId });
         gs.tournamentStatus = tournamentStatus.pause;
       } else {
@@ -106,7 +106,7 @@ const gamestate = Object.create(EventEmitter.prototype, {
         .then(async function () {
           logger.info('Tournament %s is just finished.', tournament.id, { tag: gs.handUniqueId });
           this[tournaments_].delete(tournament.id);
-          if (gs.tableType === 'sandbox') {
+          if (gs.tableType === 'sandbox' && !gs.sandboxError) {
             this.emit('sandbox:update', Object.assign({}, { id: gs.mainPlayer.id, gameCompleted: true }));
           }
           for (let player of gs.players) {
@@ -114,7 +114,10 @@ const gamestate = Object.create(EventEmitter.prototype, {
             if (gs.tableType !== 'sandbox') {
               await storage.updateUser({ id: player.userId, chips: player.chips });
             }
-            await storage.endSession(player.sessionId);
+
+            if (!gs.sandboxError) {
+              await storage.endSession(player.sessionId);
+            }
           }
           await storage.updateTable({ id: tournament.id, numPlayers: 0 });
           return this.emit('tournament:completed', { tournamentId: tournament.id });

@@ -267,7 +267,7 @@ const actions = {
         // make sure that the current players can see only his cards
         state.players = gs.players.map(function (player) {
           const cleanPlayer = {
-            id: player.id, name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
+            name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
           };
           if (this.id !== player.id) {
             return cleanPlayer;
@@ -298,21 +298,26 @@ const actions = {
         };
 
         request.post(`${this.serviceUrl}bet`, requestSettings, (err, response, playerBetAmount) => {
-          if (err) {
-            logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err.message, { tag: gs.handUniqueId });
+          if (err || response.statusCode !== 200) {
+            logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err ? err.message : response.statusMessage, { tag: gs.handUniqueId });
             if (gs.tableType === 'sandbox') {
+              gs.sandboxError = true;
+              console.log('error');
               engine.emit('sandbox:update', Object.assign({},
                 {
                   id: this.id,
                   botConnected: false,
                   gameCompleted: false,
-                  botMessage: 'Please make sure bot url is correct'
+                  botMessage: 'Please make sure bot url is correct and bot is running'
                 }));
-
+              
               storage.updateBot({ id: this.id, isActive: false });
-              storage.endSession(player.sessionId);
+              storage.deleteSession(this.sessionId);
               storage.updateTable({ id: gs.tournamentId, numPlayers: gs.players.length });
               gs.tournamentStatus = gameStatus.stop;
+            } else if (gs.tableType === 'pvp') {
+              const playerId = this.id;
+              gs.players = gs.players.filter(p => p.id !== playerId);
             }
             return void resolve(0);
           }
