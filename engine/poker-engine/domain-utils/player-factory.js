@@ -69,13 +69,15 @@ const actions = {
    *
    * @param {Object} gs:
    *  the gamestate object
-   * @param {Number} betAmount
+   * @param {Object} playerRes
    *  the amount of chips the player has to pay
    *
    * @returns {Promise} a promise resolved when bet data is stored
    */
-  async payBet(gs, betAmount) {
-    if (betAmount < 0 && !this.willLeave) {
+  async payBet(gs, playerRes) {
+    let betAmount = playerRes.bet;
+
+    if ((betAmount < 0 || playerRes.leave) && !this.willLeave) {
       this.leave(gs);
     }
 
@@ -246,8 +248,6 @@ const actions = {
         state.pot = gs.pot;
         state.sidepots = gs.sidepots;
 
-        state.buyin = this.buyIn;
-
         // list of the community cards on the table
         // ... everyone is able to access this same list
         state.commonCards = gs.commonCards;
@@ -267,7 +267,7 @@ const actions = {
         // make sure that the current players can see only his cards
         state.players = gs.players.map(function (player) {
           const cleanPlayer = {
-            name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet
+            name: player.name, status: player.status, chips: player.chips, chipsBet: player.chipsBet, buyIn: this.buyIn,
           };
           if (this.id !== player.id) {
             return cleanPlayer;
@@ -297,12 +297,12 @@ const actions = {
           timeout: 5000
         };
 
-        request.post(`${this.serviceUrl}bet`, requestSettings, (err, response, playerBetAmount) => {
+        request.post(`${this.serviceUrl}`, requestSettings, async (err, response, playerRes) => {
+          console.log(response.body);
           if (err || response.statusCode !== 200) {
             logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err ? err.message : response.statusMessage, { tag: gs.handUniqueId });
-            if (gs.tableType === 'sandbox') {
+            if (gs.tableType === 'sandbox' && this.botType === 'userBot') {
               gs.sandboxError = true;
-              console.log('error');
               engine.emit('sandbox:update', Object.assign({},
                 {
                   id: this.id,
@@ -310,20 +310,20 @@ const actions = {
                   gameCompleted: false,
                   botMessage: 'Please make sure bot url is correct and bot is running'
                 }));
-              
-              storage.updateBot({ id: this.id, isActive: false });
-              storage.deleteSession(this.sessionId);
-              storage.updateTable({ id: gs.tournamentId, numPlayers: gs.players.length });
+
+              await storage.deleteSession(this.sessionId);
+              await storage.updateBot({ id: this.id, isActive: false });
               gs.tournamentStatus = gameStatus.stop;
             } else if (gs.tableType === 'pvp') {
-              const playerId = this.id;
-              gs.players = gs.players.filter(p => p.id !== playerId);
+              gs.players = gs.players.filter(p => p.id !== this.id);
+              await storage.updateTable({ id: gs.tournamentId, numPlayers: gs.players.length });
+              await storage.updateBot({ id: this.id, totalWinnings: (this.totalWinnings + this.chips), isActive: false, leaveTable: gs.tournamentId });
             }
-            return void resolve(0);
+            return void resolve({ bet: 0 });
           }
           engine.emit('sandbox:update', Object.assign({}, { id: this.id, botConnected: true }));
-          logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerBetAmount, { tag: gs.handUniqueId });
-          resolve(sanitizeAmount(playerBetAmount));
+          logger.log('silly', '%s (%s) has bet %s (raw)', this.name, this.id, playerRes.bet, { tag: gs.handUniqueId });
+          resolve(playerRes);
         });
       } catch (err) {
         logger.log('error', `Error talking player id: ${this.id}`, err);

@@ -32,8 +32,8 @@ def mastermind(game_state):
     half_buyin = game_state['state']['buyin'] * 0.5
 
     if my_bot['chips'] < half_buyin:
-        return my_bot['chips']
-    return game_state['state']['callAmount']
+        return {'bet': my_bot['chips'], 'leave': False}
+    return {'bet': game_state['state']['callAmount'], 'leave': False}
 
 
 # Gets bot from game_state
@@ -60,8 +60,8 @@ def RIP_bot(game_state):
     me = p[gs['me']]
 
     if me['chips'] * 0.2 <= gs['callAmount']:
-        return gs['callAmount']
-    return me['chips'] * 0.2
+        return {'bet': gs['callAmount'], 'leave': False}
+    return {'bet': me['chips'] * 0.2, 'leave': False}
 
 
 def ggez(game_state):
@@ -150,8 +150,8 @@ def triton_bot(game_state):
         rank += 14
 
     if rank >= 16:
-        return gs['minimumRaiseAmount'] * 1.5
-    return gs['callAmount']
+        return {'bet': gs['minimumRaiseAmount'] * 1.5, 'leave': False}
+    return {'bet': gs['callAmount'], 'leave': False}
 
 
 def uc_my_cards(game_state):

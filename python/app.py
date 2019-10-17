@@ -21,7 +21,7 @@ def get_bot1():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return str(dummy_bot(request.json))
+    return json.dumps(bot_methods.triton_bot(request.json))#dummy_bot(request.json)
    
 
 @app.route("/2/bet", methods=['POST'])
@@ -32,7 +32,7 @@ def get_bot2():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return str(robocop(request.json))
+    return json.dumps(bot_methods.triton_bot(request.json))#robocop(request.json)
 
 @app.route("/3/bet", methods=['POST'])
 def get_bot3():
@@ -42,7 +42,7 @@ def get_bot3():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return str(dummy_bot(request.json))
+    return json.dumps(bot_methods.triton_bot(request.json))#dummy_bot(request.json)
 
 @app.route("/4/bet", methods=['POST'])
 def get_bot4():
@@ -52,7 +52,7 @@ def get_bot4():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return str(bot_methods.triton_bot(request.json))
+    return json.dumps(bot_methods.triton_bot(request.json))
 
 @app.route("/5/bet", methods=['POST'])
 def get_bot5():
@@ -62,7 +62,7 @@ def get_bot5():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return str(bot_methods.mastermind(request.json))
+    return json.dumps(bot_methods.mastermind(request.json))
 
 @app.route("/6/bet", methods=['POST'])
 def get_bot6():
@@ -72,4 +72,4 @@ def get_bot6():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return str(bot_methods.RIP_bot(request.json))
+    return json.dumps(bot_methods.RIP_bot(request.json))

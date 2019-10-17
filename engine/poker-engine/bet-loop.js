@@ -66,9 +66,9 @@ exports = module.exports = async function betLoop(gs) {
             await asyncFrom(gs.players, startIndex, shouldBreak.bind(null, gs),
                 player => shouldBet(gs, player, async player => {
 
-                    const bet = await player.talk(gs);
+                    const res = await player.talk(gs);
                     
-                    await player.payBet(gs, bet);
+                    await player.payBet(gs, res);
 
                     if (gs.config.BETWAIT) {
                         await sleep(gs.config.BETWAIT);
