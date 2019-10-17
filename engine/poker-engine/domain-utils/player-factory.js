@@ -272,6 +272,7 @@ const actions = {
           if (this.id !== player.id) {
             return cleanPlayer;
           }
+          
           cleanPlayer.cards = player.cards;
           return cleanPlayer;
         }, this);
@@ -284,7 +285,8 @@ const actions = {
             tournamentId: gs.tournamentId,
             handId: state.hand,
             gameId: state.game
-          }
+          },
+          attributes: { exclude: ['playerId', 'id'] },
         });
 
         const cleanHistory = getCleanHistory(gs.players[state.me].id, history);
