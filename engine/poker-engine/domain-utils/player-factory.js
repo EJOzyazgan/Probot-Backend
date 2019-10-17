@@ -327,7 +327,7 @@ const actions = {
         });
       } catch (err) {
         logger.log('error', `Error talking player id: ${this.id}`, err);
-        resolve(0);
+        resolve({ bet: 0 });
       }
     });
   },
