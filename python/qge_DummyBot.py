@@ -14,7 +14,7 @@ def dummy_bot(game_state):
     mybet = me['chipsBet']
 
     if me["status"] != "active":
-        return 0
+        return {bet: 0}
 
     my_chips = me["chips"]
 
@@ -40,49 +40,49 @@ def dummy_bot(game_state):
 
     if len(common_cards) == 0:
         if call_amount >= my_chips / 3 and win_rate < 0.3:
-            return 0
+            return {bet: 0}
         if win_rate <= 0.23:
-            return 0
+            return {bet: 0}
         elif win_rate <= 0.5:
-            return call_amount
+            return {bet: call_amount}
         else:
-            return max([int(raise_amount * (1 + 2 * (win_rate - 0.5))), int(my_chips / 4)])
+            return {bet: max([int(raise_amount * (1 + 2 * (win_rate - 0.5))), int(my_chips / 4)])}
 
     elif len(common_cards) == 3:
 
         if call_amount >= my_chips / 2 and win_rate < 0.5 and mybet < 0.2 * my_chips:
-            return 0
+            return {bet: 0}
         if win_rate <= 0.3:
-            return 0
+            return {bet: 0}
         elif win_rate <= 0.55:
-            return call_amount
+            return {bet: call_amount}
         else:
-            return min([max([int(raise_amount * (1 + win_rate - 0.55)), int(my_chips / 4)]), call_amount])
+            return {bet: min([max([int(raise_amount * (1 + win_rate - 0.55)), int(my_chips / 4)]), call_amount])}
 
     elif len(common_cards) == 4:
 
         if call_amount >= my_chips / 2 and win_rate < 0.6 and mybet < my_chips / 3:
-            return 0
+            return {bet: 0}
         if win_rate <= 0.40:
-            return 0
+            return {bet: 0}
         elif win_rate <= 0.75:
-            return call_amount
+            return {bet: call_amount}
         else:
-            return min([max([int(raise_amount * (1 + 3 * (win_rate - 0.75))), int(my_chips / 3)]), call_amount])
+            return {bet :min([max([int(raise_amount * (1 + 3 * (win_rate - 0.75))), int(my_chips / 3)]), call_amount])}
 
     else:
 
         if call_amount >= my_chips and win_rate < 0.64 and mybet < my_chips / 1.5:
-            return 0
+            return {bet: 0}
         if win_rate <= 0.40:
-            return 0
+            return {bet: 0}
         elif win_rate <= 0.85:
-            return call_amount
+            return {bet: call_amount}
         elif win_rate <= 0.95:
-            return min([max([int(raise_amount * (1 + 10 * (win_rate - 0.85))), int(my_chips / 1.5)]), call_amount])
+            return {bet: min([max([int(raise_amount * (1 + 10 * (win_rate - 0.85))), int(my_chips / 1.5)]), call_amount])}
         else:
             # lol rip
-            return my_chips
+            return {bet: my_chips}
 
 
 import collections
