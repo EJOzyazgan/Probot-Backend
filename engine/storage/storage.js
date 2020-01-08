@@ -1,7 +1,5 @@
 const logger = require('./logger');
 
-const engine = require('../index');
-
 const moment = require('moment');
 
 const models = require('../../models');
@@ -13,6 +11,7 @@ const Bot = models.Bot;
 const Metric = models.Metric;
 const Session = models.Session;
 const SessionUpdates = models.SessionUpdates;
+const Queue = models.Queue;
 
 module.exports = {
   save,
@@ -22,6 +21,7 @@ module.exports = {
   createMetric,
   endSession,
   deleteSession,
+  checkQueue,
 }
 
 async function save(updates) {
@@ -183,4 +183,25 @@ async function deleteSession(id) {
       },
     });
   }
+}
+
+async function checkQueue(tableId) {
+  const queued = await Queue.findAll({
+    where: {
+      tableId
+    },
+    attributes: ['botId'],
+  });
+
+
+
+  const players = await Bot.findAll({
+    where: {
+      id: {
+        [Op.in]: queued.map(player => player.botId),
+      },
+    },
+  });
+
+  return players;
 }

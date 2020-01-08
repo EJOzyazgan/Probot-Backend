@@ -29,6 +29,13 @@ exports = module.exports = async function dealer(gs) {
   function waitResume() {
     return new Promise(function (resolve, rej) {
       const time = setInterval(function () {
+        const joining = await storage.checkQueue(gs.tournamentId);
+        if (joining.length > 0) {
+
+        }
+        
+        engine.join(gs.tournamentId, joining);
+
         if (gs.tournamentStatus === gameStatus.play) {
           resolve(clearInterval(time));
         }

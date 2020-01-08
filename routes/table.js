@@ -5,6 +5,7 @@ const passport = require('passport');
 const models = require('../models');
 const Table = models.Table;
 const Bot = models.Bot;
+const Queue = models.Queue;
 
 router.post('/create', passport.authenticate('jwt', { session: false }), async (req, res) => {
   Table.create(req.body)
@@ -86,7 +87,7 @@ router.post('/join', passport.authenticate('jwt', { session: false }), async (re
     for (let i = 1; i < 6; i++) {
       for (let table of tables) {
         if (table.numPlayers === i && req.body.bot.currentTables.indexOf(table.id) < 0) {
-          engine.join(table.id, [req.body.bot]);
+          await Queue.create({botId: req.body.bot.id, tableId: table.id});
           return res.status(200).json({ msg: 'Joined Table' });
         }
       }
@@ -94,8 +95,8 @@ router.post('/join', passport.authenticate('jwt', { session: false }), async (re
       if (tables.length === 0) {
         return await openNewTable(res, req);
       } else if (i === 5 && tables[0].numPlayers === 0) {
-        engine.join(tables[0].id, [req.body.bot]);
-        return res.status(200).json({ msg: 'Waiting for other players' });
+        await Queue.create({botId: req.body.bot.id, tableId: table[0].id});
+        return res.status(200).json({ msg: 'Joined Table' });
       } else if (i === 5) {
         return await openNewTable(res, req);
       }

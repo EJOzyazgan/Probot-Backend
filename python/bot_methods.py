@@ -29,7 +29,7 @@ def one_hit_wonder(game_state):
 # Otherwise call
 def mastermind(game_state):
     my_bot = game_state['state']['players'][game_state['state']['me']]
-    half_buyin = game_state['state']['buyin'] * 0.5
+    half_buyin =my_bot['buyIn'] * 0.5
 
     if my_bot['chips'] < half_buyin:
         return {'bet': my_bot['chips'], 'leave': False}
@@ -43,9 +43,6 @@ def good_game(game_state):
     gs = game_state['state']
     p = gs['players']
     me = p[gs['me']]
-
-    # if gs['game'] == 1 and gs['hand'] == 3:
-    #     return -1
 
     if me['cards'][0]['rank'] == me['cards'][1]['rank']:
         return gs['minimumRaiseAmount'] * 2
@@ -80,8 +77,8 @@ def cash_machine(game_state):
     me = p[gs['me']]
 
     if me['chips'] > gs['callAmount']:
-        return random.randint(gs['callAmount'], me['chips'])
-    return 0
+        return {'bet': gs['callAmount']}
+    return {'bet': 0}
 
 
 def the_joker(game_state):
@@ -186,16 +183,19 @@ def uc_my_cards(game_state):
         rank += 11
     elif me['cards'][1]['rank'] == 'Q':
         rank += 12
-    elif me['cards'][11]['rank'] == 'K':
+    elif me['cards'][1]['rank'] == 'K':
         rank += 13
     elif me['cards'][1]['rank'] == 'A':
         rank += 14
 
-    if rank >= 22:
-        return gs['minimumRaiseAmount'] * 3
-    elif rank >= 16:
-        return gs['minimumRaiseAmount'] * 1.5
-    return gs['callAmount']
+    myBet = gs['minimumRaiseAmount']
+
+    if rank >= 24 and me['chips'] >= gs['minimumRaiseAmount'] * 2:
+        myBet = gs['minimumRaiseAmount'] * 2
+    elif rank >= 20 and me['chips'] >= gs['minimumRaiseAmount'] * 1.5:
+        myBet = gs['minimumRaiseAmount'] * 1.5
+
+    return {'bet': myBet}
 
 
 def deez_botz(game_state):

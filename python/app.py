@@ -72,4 +72,4 @@ def get_bot6():
     # f = open("ariel_data.txt", "a+")
     # f.write(',')
     # f.close()
-    return json.dumps(bot_methods.RIP_bot(request.json))
+    return json.dumps(bot_methods.uc_my_cards(request.json))

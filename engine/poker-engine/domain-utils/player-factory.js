@@ -300,7 +300,6 @@ const actions = {
         };
 
         request.post(`${this.serviceUrl}`, requestSettings, async (err, response, playerRes) => {
-          console.log(response.body);
           if (err || response.statusCode !== 200) {
             logger.warn('Bet request to %s failed, cause %s', this.serviceUrl, err ? err.message : response.statusMessage, { tag: gs.handUniqueId });
             if (gs.tableType === 'sandbox' && this.botType === 'userBot') {
